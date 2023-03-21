@@ -124,13 +124,13 @@ fn main() {
 
     // print the updated farm
     // let farm2 = farms_state.get(addr2).unwrap();
-    println!("Farm size: {}", farm2.get_size());
-    println!("Farm plots: {}", farm2.get_plots());
+    // println!("Farm size: {}", farm2.get_size());
+    // println!("Farm plots: {}", farm2.get_plots());
     println!("Farm All Unique Items: {:?}", farm2.get_all_unique_plot_items());
     println!("Query Farm Specific dirt plots: {:?}", farm2.get_plots_with_type(Item::Dirt));
 
     let check = farm2.get_plot(0, 2);
-    println!("Farm item @ (0,2): {:?}", check);
+    println!("Farm item query @ (0,2): {:?}", check);
 
     // let farm_item = farm2.get_plot(1, 1);
     // println!("Farm item: {:?}", farm_item);
@@ -150,7 +150,7 @@ fn main() {
     // NOTE: on query, we need to show wheat when getting plots when the cooldown is over
     // interact with farm2 0, 0 
     let farm2 = farm2.clone().interact(0, 0, current_block_height);
-    println!("Farm plots: {}", farm2.get_plots());
+    println!("\nFarm plots: {}", farm2.get_plots());
     println!("Farm plot cooldowns (block height={}): {:?}", current_block_height, farm2.get_cooldowns(current_block_height));
 
     current_block_height += 11;
@@ -175,6 +175,23 @@ fn main() {
     // query_farm
     let user_farm = query_farm(&farms_state, addr1, current_block_height);
     println!("User Farm: {:?}", user_farm);
+
+    // upgrade farm size to 5x5
+    let farm2 = farm2.clone().upgrade_size(2);
+    // save to state
+    farms_state.insert(addr1.to_string(), farm2.clone());
+
+    // show farm
+    
+    println!("Upgraded User Farm: {}", farm2.get_plots());
+
+    // till 4x4
+    let farm2 = farm2.clone().till(0, 4);
+    // save to state
+    farms_state.insert(addr1.to_string(), farm2.clone());
+
+    // show farm
+    println!("Tilled User Farm on new ugrade land: {}", farm2.get_plots());
 
 
 }
@@ -261,13 +278,17 @@ impl Farm {
             }
         }
 
-        for _ in 0..amount {
-            let mut row = vec![];
-            for _ in 0..self.get_size() + amount {
-                row.push(Item::Grass);
-            }
-            self.plots.push(row);
+        let mut new_row = vec![];
+        for _ in 0..self.get_size() + amount {
+            new_row.push(Item::Grass);
         }
+
+        // add 0..amount to the bottom
+        for _ in 0..amount {
+            self.plots.push(new_row.clone());
+        }
+
+        println!("\nUpgrading farm size to {}x{}", self.get_size(), self.get_size());
 
         self.clone()
     }
@@ -275,6 +296,7 @@ impl Farm {
     pub fn till(&mut self, x: usize, y: usize) -> Farm {
         if self.get_plot(x, y) == Item::Grass {
             self.set_plot(x, y, Item::Dirt);
+            println!("Tilled plot at {}, {}", x, y);
         }
         self.clone()
     }
@@ -303,7 +325,7 @@ impl Farm {
             let plot = self.get_plot(x, y);
 
             if plot == Item::WheatSeed {
-                println!("Harvested wheat at {}, {}. Setting to Dirt", x, y);
+                println!("\nHarvested wheat at {}, {}. Setting to Dirt", x, y);
                 self.set_plot(x, y, Item::Dirt);
 
                 // give user wheat item here OR mint Wheat tokenfactory token

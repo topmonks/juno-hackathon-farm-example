@@ -1,0 +1,46 @@
+Farm size: 3
+Farm plots: 
+ [Grass, Grass, Grass]
+ [Grass, Grass, Grass]
+ [Grass, Grass, Grass]
+Tilled plot at 0, 0
+Tilled plot at 2, 0
+Tilled plot at 1, 1
+Tilled plot at 2, 2
+Farm All Unique Items: [Dirt, Grass]
+Query Farm Specific dirt plots: [(0, 0), (1, 1), (2, 0), (2, 2)]
+Farm item query @ (0,2): Grass
+User Farm: Farm { plots: [[Dirt, Grass, Dirt], [Grass, Dirt, Grass], [Grass, Grass, Dirt]], cooldowns: {} }
+Planted seed at 0, 0
+Farm plots: 
+ [Wheat Seed, Grass, Dirt]
+ [Grass, Dirt, Grass]
+ [Grass, Grass, Dirt]
+Farm plot cooldowns: {(0, 0): 10}
+Cooldown active for 0, 0 for 10 more blocks
+
+Farm plots: 
+ [Wheat Seed, Grass, Dirt]
+ [Grass, Dirt, Grass]
+ [Grass, Grass, Dirt]
+Farm plot cooldowns (block height=0): {(0, 0): 10}
+Current Block Height: 11
+User Farm: Farm { plots: [[Wheat, Grass, Dirt], [Grass, Dirt, Grass], [Grass, Grass, Dirt]], cooldowns: {} }
+
+Harvested wheat at 0, 0. Setting to Dirt
+User Farm: Farm { plots: [[Dirt, Grass, Dirt], [Grass, Dirt, Grass], [Grass, Grass, Dirt]], cooldowns: {} }
+
+Upgrading farm size to 5x5
+Upgraded User Farm: 
+ [Dirt, Grass, Dirt, Grass, Grass]
+ [Grass, Dirt, Grass, Grass, Grass]
+ [Grass, Grass, Dirt, Grass, Grass]
+ [Grass, Grass, Grass, Grass, Grass]
+ [Grass, Grass, Grass, Grass, Grass]
+Tilled plot at 0, 4
+Tilled User Farm on new ugrade land: 
+ [Dirt, Grass, Dirt, Grass, Grass]
+ [Grass, Dirt, Grass, Grass, Grass]
+ [Grass, Grass, Dirt, Grass, Grass]
+ [Grass, Grass, Grass, Grass, Grass]
+ [Dirt, Grass, Grass, Grass, Grass]
