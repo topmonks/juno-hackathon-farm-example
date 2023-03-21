@@ -145,14 +145,16 @@ fn main() {
     let farm2 = farm2.clone().plant_seed(0, 0); // top right
     println!("Farm plots: {}", farm2.get_plots());
     // / get cooldowns
-    println!("Farm plot cooldowns: {:?}", farm2.get_cooldowns());
+    println!("Farm plot cooldowns: {:?}", farm2.get_cooldowns(current_block_height));
     
     // NOTE: on query, we need to show wheat when getting plots when the cooldown is over
     // interact with farm2 0, 0 
     let farm2 = farm2.clone().interact(0, 0, current_block_height);
     println!("Farm plots: {}", farm2.get_plots());
-    println!("Farm plot cooldowns: {:?}", farm2.get_cooldowns());
+    println!("Farm plot cooldowns (block height={}): {:?}", current_block_height, farm2.get_cooldowns(current_block_height));
+
     current_block_height += 11;
+    println!("Current Block Height: {}", current_block_height);
 
     //  save farm to state
     farms_state.insert(addr1.to_string(), farm2.clone());
@@ -195,6 +197,9 @@ pub fn query_farm(farm_state: &Farms, addr: &str, current_block_height: u32) -> 
             }
         }
     }
+
+    let cooldowns = temp_farm.get_cooldowns(current_block_height);
+    temp_farm.cooldowns = cooldowns;
 
     temp_farm
 }
@@ -310,9 +315,18 @@ impl Farm {
         self.clone()
     }
 
-    pub fn get_cooldowns(&self) -> &Cooldowns {
+    pub fn get_cooldowns(&self, current_block_height: u32) -> Cooldowns {
         // This is when a user can interact with ths plot again in the future
-        &self.cooldowns
+        // &self.cooldowns
+        let mut updated_cooldowns: Cooldowns = self.cooldowns.clone();
+        for (key, value) in &self.cooldowns {
+            if value < &current_block_height {
+                // self.cooldowns.remove(key);
+                updated_cooldowns.remove(key);
+            }
+        }
+
+        return updated_cooldowns;
     }
 
     pub fn get_cooldown(&self, x: usize, y: usize) -> u32 {
