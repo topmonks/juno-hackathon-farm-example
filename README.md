@@ -1,23 +1,33 @@
-# Juno Farm Hackathon
+# Juno Farm Hackathon Template
 
+A very rough contract template that implements 2 example executes and 2 queries to get you started.
 
-Considerations:
-- per address profiles (address = 1 farm)
-- Query others farms info
-- User inventory of seeds / items
-- single leaderboard idea
+There are MANY areas of improvement throughout the application which can be made.
 
-Logic:
-- Start with grass (till into dirt (cost 1 block of time))
-- If dirt is not planted in 3-6 hours, turn back to grass (on try to plant, error our for its back to grass. Then set it to grass)
+The base template includes:
 
-- tilled dirt, add a seed to plant
-    different seeds take different amounts of time to grow
-    after X blocks, allow them to be harvested'
+- [Proof of Concept](./_ProofOfConcept/)
+- [Contract Template Source](./src/)
+- [Bash E2E testing](./e2e/)
 
-- Increase farm size for a fee (JUNO, or tokenfactory)
+If you have `make` installed, you can run `make compile` to get your contract to compile (x86_64 processors).
 
+The farm.rs has the base farm game logic. The code here will need cleanup. Only the start & till functions will 100% work as expected.
 
-Expand Ideas:
-- Use v13 FeeShare
-- Use TokenFactory for Seeds / equiptment  (ex: watering can).
+It is up to you to be creative, redesign, and implement better features off what has been provided.
+
+```bash
+wasm_cmd $FARM_CONTRACT '{"start":{}}' "" show_log
+
+profile=$(query_contract $FARM_CONTRACT '{"get_farm_profile":{"address":"juno1hj5fveer5cjtn4wd6wstzugjfdxzl0xps73ftl"}}' | jq -r '.data') && echo $profile
+# { "plots": [ [ "Grass", "Grass", "Grass" ], [ "Grass", "Grass", "Grass" ], [ "Grass", "Grass", "Grass" ] ], "cooldowns": {} }
+
+wasm_cmd $FARM_CONTRACT '{"till_ground":{"x":0,"y":0}}' "" show_log
+
+profile=$(query_contract $FARM_CONTRACT '{"get_farm_profile":{"address":"juno1hj5fveer5cjtn4wd6wstzugjfdxzl0xps73ftl"}}' | jq -r '.data') && echo $profile
+# { "plots": [ [ "Dirt", "Grass", "Grass" ], [ "Grass", "Grass", "Grass" ], [ "Grass", "Grass", "Grass" ] ], "cooldowns": {} }
+```
+
+Generate your Typescript from [CosmWasm/ts-codegen](https://github.com/CosmWasm/ts-codegen) to convert your contract's executes and queries into a Typescript interface.
+
+Use [https://juno.reece.sh/](https://juno.reece.sh/) to register your contract with FeeShare (mainnet)!
