@@ -16,3 +16,5 @@
 # IDEs
 *.iml
 .idea
+
+scripts/contract-address*
