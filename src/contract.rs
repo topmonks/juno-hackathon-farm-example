@@ -76,7 +76,10 @@ pub fn execute(
             }
 
             if plot_value != FarmItem::Grass {
-                return Err(throw_err("Plot must be grass to till"));
+                return Err(throw_err(&format!(
+                    "Plot [{}, {}] must be grass to till",
+                    x, y
+                )));
             }
 
             // till the plot

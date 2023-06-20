@@ -1,1 +1,1 @@
-c2fb490883bc8e12079e685f30f049aa2c49cf22f182c7c465d6a31cfff3829e  juno_farm_hackathon_template.wasm
+841758de36b347c1bcc812a7aa25231fcaf6e17b3d52bb917e53f7bfaecb820f  juno_farm_hackathon_template.wasm

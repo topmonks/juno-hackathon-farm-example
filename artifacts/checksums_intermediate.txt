@@ -1,1 +1,1 @@
-e3acb9730fd470b20d3f01bf4f64c454026b10edc5447a8fe001ecd98829b7a1  ./target/wasm32-unknown-unknown/release/juno_farm_hackathon_template.wasm
+c16d5f1cff6fee8582ced49be01e16e08387e791af77a078a439eaf37512ce71  ./target/wasm32-unknown-unknown/release/juno_farm_hackathon_template.wasm

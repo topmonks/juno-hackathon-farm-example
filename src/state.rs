@@ -64,22 +64,22 @@ impl FarmProfile {
             // throw error
         }
 
-        let y = self.plots.get(y);
-        if y.is_none() {
+        let row = self.plots.get(x);
+        if row.is_none() {
             return FarmItem::Air;
         }
 
-        let x = y.unwrap().get(x);
-        if x.is_none() {
+        let col = row.unwrap().get(y);
+        if col.is_none() {
             return FarmItem::Air;
         } else {
-            return x.unwrap().clone();
+            return col.unwrap().clone();
         }
     }
 
     pub fn set_plot(&mut self, x: usize, y: usize, value: FarmItem) {
         // edge cases? what if its air?
-        self.plots[y][x] = value;
+        self.plots[x][y] = value;
     }
 
     pub fn upgrade_size(&mut self, amount: usize) -> FarmProfile {
