@@ -58,6 +58,13 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "start"))
         }
 
+        ExecuteMsg::Stop {} => {
+            let sender = info.sender.to_string();
+            FARM_PROFILES.remove(deps.storage, sender.as_str());
+
+            Ok(Response::new().add_attribute("action", "stop"))
+        }
+
         // For UI/UX, how could a user till multiple at the same time?
         ExecuteMsg::TillGround { x, y } => {
             let sender = info.sender.to_string();
