@@ -38,14 +38,14 @@ function instantiate {
       }
 END
   )
-  
+
   local msg
   msg="$(printf "${instantiate_msg}" "$ADMIN")"
 
   local tx_hash
   tx_hash=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y | jq '.txhash' -r)
   sleep 10
-  
+
   junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq 'last(.logs[0].events[] | .attributes[] | select(.key=="_contract_address") | .value)' -r
 }
 
@@ -53,7 +53,8 @@ function migrate {
     local code_id="${1}"
     local contract_addr="${2}"
 
-    junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm migrate "${contract_addr}" "${code_id}" '{}'
+    tx_hash=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 --from "${ADMIN}" tx wasm migrate "${contract_addr}" "${code_id}" '{}' --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.2 -o json -y | jq '.txhash' -r )
+    echo "Migration TX hash: ${tx_hash}"
 }
 
 function deploy_new {
@@ -76,8 +77,8 @@ function deploy_update {
   contract_addr="$(cat scripts/contract-address-junox)"
   echo "CODE_ID: ${code_id}"
   echo "CONTRACT_ADDR: ${contract_addr}"
-  migrate "${code_id}"
+  migrate "${code_id}" "${contract_addr}"
 }
 
-deploy_new
-#deploy_update
+# deploy_new
+deploy_update
