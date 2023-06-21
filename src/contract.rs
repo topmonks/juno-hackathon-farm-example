@@ -108,7 +108,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             let v = to_binary(&info)?;
             Ok(v)
         }
-
         QueryMsg::GetFarmProfile { address } => {
             let farms = FARM_PROFILES.may_load(deps.storage, address.as_str())?;
             let v = to_binary(&farms)?;

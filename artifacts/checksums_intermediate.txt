@@ -1,1 +1,0 @@
-88339ce0d5555a89997e5ac0ea0ac3209ac4b5ac1ef14fcdaccdcd18ac6aba73  ./target/wasm32-unknown-unknown/release/juno_farm_hackathon_template.wasm
