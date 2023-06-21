@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use crate::state::FarmProfile;
@@ -8,6 +6,9 @@ use crate::state::FarmProfile;
 pub struct InstantiateMsg {
     pub admin: Option<String>,
 }
+
+#[cw_serde]
+pub struct MigrateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {

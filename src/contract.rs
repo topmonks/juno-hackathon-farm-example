@@ -5,7 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::farm::FarmItem;
-use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
 use crate::state::{FarmProfile, FARM_PROFILES, INFORMATION};
@@ -28,6 +28,13 @@ pub fn instantiate(
     INFORMATION.save(deps.storage, &ContractInformationResponse { admin })?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    Ok(Response::default())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

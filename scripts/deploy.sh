@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+shopt -s inherit_errexit
+
+ADMIN=${1:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}
+
 JUNOFARMS_PATH='../junofarms'
 
 function update_contract_address {
@@ -8,32 +13,71 @@ function update_contract_address {
   sed -i "s/\(VITE_CONTRACT_ADDRESS=\).*/\1${new_address}/g" "${JUNOFARMS_PATH}/package/ui/.env"
 }
 
-docker run --rm -v "$(pwd)":/code:Z \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.11
+function compile {
+  docker run --rm -v "$(pwd)":/code:Z \
+    --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+    --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+    cosmwasm/rust-optimizer:0.12.11
+}
 
-ADMIN=${1:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}
-TX_HASH=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm store artifacts/juno_farm_hackathon_template.wasm --from $ADMIN --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 -o json -y | jq '.txhash' -r)
-sleep 10
+function upload_code {
+  local tx_hash
+  tx_hash="$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm store artifacts/juno_farm_hackathon_template.wasm --from "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 -o json -y | jq '.txhash' -r)"
+  sleep 10
 
-CODE_ID=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "$TX_HASH" -o json | jq '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value' -r)
-echo $CODE_ID
+  junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value' -r
+}
 
-INSTANTIATE_MSG=$(cat <<-END
-    {
-      "admin": "%s"
-    }
+function instantiate {
+  local code_id="${1}"
+
+  local instantiate_msg
+  instantiate_msg=$(cat <<-END
+      {
+        "admin": "%s"
+      }
 END
-)
+  )
+  
+  local msg
+  msg="$(printf "${instantiate_msg}" "$ADMIN")"
 
-MSG=$(printf "$INSTANTIATE_MSG" "$ADMIN")
+  local tx_hash
+  tx_hash=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y | jq '.txhash' -r)
+  sleep 10
+  
+  junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq 'last(.logs[0].events[] | .attributes[] | select(.key=="_contract_address") | .value)' -r
+}
 
-TX_HASH=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate $CODE_ID "$MSG" --from $ADMIN --admin $ADMIN --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y | jq '.txhash' -r)
-sleep 10
-echo $TX_HASH
+function migrate {
+    local code_id="${1}"
+    local contract_addr="${2}"
 
-CONTRACT_ADDR=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "$TX_HASH" -o json | jq 'last(.logs[0].events[] | .attributes[] | select(.key=="_contract_address") | .value)' -r)
-CONTRACT_ADDR=${CONTRACT_ADDR}
-echo $CONTRACT_ADDR | tee ./scripts/contract-address-junox
-update_contract_address "${CONTRACT_ADDR}"
+    junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm migrate "${contract_addr}" "${code_id}" '{}'
+}
+
+function deploy_new {
+  compile
+  local code_id
+  code_id=$(upload_code)
+  echo "CODE_ID: ${code_id}"
+  local contract_addr
+  contract_addr="$(instantiate "${code_id}")"
+  echo "CONTRACT_ADDR: ${contract_addr}"
+  echo "${contract_addr}" > ./scripts/contract-address-junox
+  update_contract_address "${contract_addr}"
+}
+
+function deploy_update {
+  compile
+  local code_id
+  code_id=$(upload_code)
+  local contract_addr
+  contract_addr="$(cat scripts/contract-address-junox)"
+  echo "CODE_ID: ${code_id}"
+  echo "CONTRACT_ADDR: ${contract_addr}"
+  migrate "${code_id}"
+}
+
+deploy_new
+#deploy_update
