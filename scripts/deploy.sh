@@ -1,3 +1,13 @@
+#!/usr/bin/env bash
+
+JUNOFARMS_PATH='../junofarms'
+
+function update_contract_address {
+  local new_address="${1}"
+
+  sed -i "s/\(VITE_CONTRACT_ADDRESS=\).*/\1${new_address}/g" "${JUNOFARMS_PATH}/package/ui/.env"
+}
+
 docker run --rm -v "$(pwd)":/code:Z \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
@@ -26,3 +36,4 @@ echo $TX_HASH
 CONTRACT_ADDR=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "$TX_HASH" -o json | jq 'last(.logs[0].events[] | .attributes[] | select(.key=="_contract_address") | .value)' -r)
 CONTRACT_ADDR=${CONTRACT_ADDR}
 echo $CONTRACT_ADDR | tee ./scripts/contract-address-junox
+update_contract_address "${CONTRACT_ADDR}"
