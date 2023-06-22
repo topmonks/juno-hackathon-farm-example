@@ -8,6 +8,7 @@ use crate::farm::SlotType;
 use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
+use crate::receive::receive;
 use crate::state::{FarmProfile, FARM_PROFILES, INFORMATION};
 
 const CONTRACT_NAME: &str = "crates.io:farm_template";
@@ -25,7 +26,15 @@ pub fn instantiate(
     let admin = msg.admin.unwrap_or_else(|| info.sender.into_string());
     deps.api.addr_validate(&admin)?;
 
-    INFORMATION.save(deps.storage, &ContractInformationResponse { admin })?;
+    let whitelisted_collections = msg.whitelisted_collections.unwrap_or_default();
+
+    INFORMATION.save(
+        deps.storage,
+        &ContractInformationResponse {
+            admin,
+            whitelisted_collections,
+        },
+    )?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -40,7 +49,7 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, C
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
@@ -91,6 +100,7 @@ pub fn execute(
 
             Ok(Response::new().add_attribute("action", "tilled"))
         }
+        ExecuteMsg::Receive(msg) => receive(deps, env, info, msg),
     }
 }
 

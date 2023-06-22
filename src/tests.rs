@@ -8,7 +8,9 @@ use cosmwasm_std::testing::{
 };
 use cosmwasm_std::{Env, OwnedDeps, QuerierResult, SystemError, SystemResult, WasmQuery};
 
-fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
+pub fn setup_test(
+    instantiate_msg: Option<InstantiateMsg>,
+) -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
     let mut dependencies = mock_dependencies();
 
     dependencies
@@ -16,6 +18,12 @@ fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         .update_wasm(move |x| handle_wasm_query(x));
 
     let mut env = mock_env();
+
+    if let Some(instantiate_msg) = instantiate_msg {
+        let info = mock_info("creator", &vec![]);
+
+        let res = instantiate(dependencies.as_mut(), mock_env(), info, instantiate_msg);
+    }
 
     (dependencies, env)
 }
@@ -39,9 +47,12 @@ fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
 
 #[test]
 fn proper_initialization() {
-    let (mut deps, _env) = setup_test();
+    let (mut deps, _env) = setup_test(None);
 
-    let msg = InstantiateMsg { admin: None };
+    let msg = InstantiateMsg {
+        admin: None,
+        whitelisted_collections: None,
+    };
     let info = mock_info("creator", &vec![]);
 
     let res = instantiate(deps.as_mut(), mock_env(), info, msg);
