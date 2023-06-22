@@ -4,7 +4,7 @@ use cosmwasm_schema::cw_serde;
 use cw_storage_plus::{Item, Map};
 
 use crate::{
-    farm::{Slot, SlotType},
+    farm::{Plant, PlantType, Slot, SlotType},
     msg::ContractInformationResponse,
 };
 
@@ -29,6 +29,15 @@ fn create_field_plot() -> Slot {
             r#type: SlotType::Field,
             plant: None,
         }
+    };
+}
+
+fn create_sunflower_plant() -> Plant {
+    return Plant {
+        r#type: PlantType::Sunflower,
+        stages: 5,
+        current_stage: 1,
+        dead: false,
     };
 }
 
@@ -112,6 +121,19 @@ impl FarmProfile {
     }
 
     pub fn plant_seed(&mut self, x: usize, y: usize) -> FarmProfile {
+        let plot = self.get_plot(x, y);
+        let plant = plot.plant;
+        if plot.r#type == SlotType::Field && plant.is_none() {
+            self.set_plot(
+                x,
+                y,
+                Slot {
+                    plant: Some(create_sunflower_plant()),
+                    ..plot
+                },
+            );
+        }
+
         self.clone()
     }
 }

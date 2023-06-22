@@ -79,14 +79,12 @@ pub fn execute(
 
         ExecuteMsg::TillGround { x, y } => {
             let sender = info.sender.to_string();
-
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
             if farm.is_none() {
                 return Err(throw_err("You do not have a farm"));
             }
 
             let mut farm = farm.unwrap();
-
             let plot_value = farm.get_plot(x.into(), y.into());
             if plot_value.r#type != SlotType::Meadow {
                 return Err(throw_err(&format!(
@@ -94,13 +92,36 @@ pub fn execute(
                     x, y
                 )));
             }
-
             let updated_farm = farm.till(x.into(), y.into());
             FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
 
             Ok(Response::new().add_attribute("action", "tilled"))
         }
+
         ExecuteMsg::Receive(msg) => receive(deps, env, info, msg),
+
+        ExecuteMsg::PlantSeed { x, y } => {
+            let sender = info.sender.to_string();
+            let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
+            if farm.is_none() {
+                return Err(throw_err("You do not have a farm"));
+            }
+
+            let mut farm = farm.unwrap();
+            let plot = farm.get_plot(x.into(), y.into());
+            let plant = plot.plant;
+            if plot.r#type != SlotType::Field || plant.is_some() {
+                return Err(throw_err(&format!(
+                    "Plot [{}, {}] must be an empty field to plant a seed.",
+                    x, y
+                )));
+            }
+
+            let updated_farm = farm.plant_seed(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+
+            Ok(Response::new().add_attribute("action", "planted"))
+        }
     }
 }
 

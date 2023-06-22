@@ -7,8 +7,16 @@ pub enum SlotType {
 }
 
 #[cw_serde]
+pub enum PlantType {
+    Sunflower,
+}
+
+#[cw_serde]
 pub struct Plant {
-    pub r#type: String,
+    pub r#type: PlantType,
+    pub current_stage: u8,
+    pub stages: u8,
+    pub dead: bool,
 }
 
 #[cw_serde]

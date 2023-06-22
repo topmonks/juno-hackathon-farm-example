@@ -18,6 +18,7 @@ pub enum ExecuteMsg {
     Start {},
     Stop {},
     TillGround { x: u8, y: u8 },
+    PlantSeed { x: u8, y: u8 },
     Receive(Cw721ReceiveMsg),
 }
 
