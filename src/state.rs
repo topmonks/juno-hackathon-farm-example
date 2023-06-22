@@ -162,4 +162,27 @@ impl FarmProfile {
 
         self.clone()
     }
+
+    pub fn harvest(&mut self, x: usize, y: usize) -> FarmProfile {
+        let plot = self.get_plot(x, y);
+        let plant = plot.plant;
+        let updated_plant = plant.map(|p| {
+            if p.stages == p.current_stage {
+                return None;
+            }
+
+            Some(p)
+        });
+
+        self.set_plot(
+            x,
+            y,
+            Slot {
+                plant: updated_plant.unwrap(),
+                ..plot
+            },
+        );
+
+        self.clone()
+    }
 }
