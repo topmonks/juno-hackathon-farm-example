@@ -41,7 +41,7 @@ pub fn receive(
         return Err(throw_err(&format!("Missing Komple metadata submodule",)));
     }
 
-    let metadata: MetadataResponse = deps.querier.query_wasm_smart(
+    let metadata: ResponseWrapper<MetadataResponse> = deps.querier.query_wasm_smart(
         submodules.data.metadata.unwrap(),
         &KompleMetadataQueryMsg::Metadata {
             token_id: msg.token_id.parse::<u32>().unwrap(),
@@ -49,6 +49,7 @@ pub fn receive(
     )?;
 
     let token_type = metadata
+        .data
         .metadata
         .attributes
         .iter()
@@ -98,7 +99,7 @@ mod test {
         let collection_addr = "collection_addr";
         let auth_info = mock_info(collection_addr, &vec![]);
         let nft_owner = "nft_owner";
-        let msg = ExecuteMsg::Receive(Cw721ReceiveMsg {
+        let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg {
             sender: nft_owner.to_string(),
             token_id: "1".to_string(),
             msg: to_binary(&Cw721HookMsg::Seed {}).unwrap(),
@@ -136,22 +137,25 @@ mod test {
                     contract_addr,
                     msg: _msg,
                 } if *contract_addr == get_komple_addrs().metadata => SystemResult::Ok(
-                    to_binary(&MetadataResponse {
-                        metadata_id: 1,
-                        metadata: Metadata {
-                            attributes: vec![Trait {
-                                trait_type: "type".into(),
-                                value: "wheat".into(),
-                            }],
-                            meta_info: MetaInfo {
-                                image: None,
-                                external_url: None,
-                                description: None,
-                                animation_url: None,
-                                youtube_url: None,
+                    to_binary(&ResponseWrapper::new(
+                        "metadata",
+                        MetadataResponse {
+                            metadata_id: 1,
+                            metadata: Metadata {
+                                attributes: vec![Trait {
+                                    trait_type: "type".into(),
+                                    value: "wheat".into(),
+                                }],
+                                meta_info: MetaInfo {
+                                    image: None,
+                                    external_url: None,
+                                    description: None,
+                                    animation_url: None,
+                                    youtube_url: None,
+                                },
                             },
                         },
-                    })
+                    ))
                     .into(),
                 ),
                 _ => general_handle_wasm_query(wasm_query),
@@ -159,7 +163,7 @@ mod test {
 
         let auth_info = mock_info(collection_addr, &vec![]);
         let nft_owner = "nft_owner";
-        let msg = ExecuteMsg::Receive(Cw721ReceiveMsg {
+        let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg {
             sender: nft_owner.to_string(),
             token_id: "1".to_string(),
             msg: to_binary(&Cw721HookMsg::Seed {}).unwrap(),

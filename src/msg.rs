@@ -21,7 +21,7 @@ pub enum ExecuteMsg {
     PlantSeed { x: u8, y: u8 },
     WaterPlant { x: u8, y: u8 },
     Harvest { x: u8, y: u8 },
-    Receive(Cw721ReceiveMsg),
+    ReceiveNft(Cw721ReceiveMsg),
 }
 
 #[cw_serde]

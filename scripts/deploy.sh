@@ -35,7 +35,7 @@ function instantiate {
   instantiate_msg=$(cat <<-END
       {
         "admin": "%s",
-        "whitelisted_collections": ["juno15yu4p7j0e65vsazt08mdlzzezsps3wenrtuukjaxduzjhet2mw0qf4p0kk"]
+        "whitelisted_collections": ["juno1utqv3gte2xttl2a0er8gef2yr6ks3fy20rerc2kvmc6vvwzhu0wsqd7c7e"]
       }
 END
   )
@@ -81,5 +81,5 @@ function deploy_update {
   migrate "${code_id}" "${contract_addr}"
 }
 
-deploy_new
-# deploy_update
+# deploy_new
+deploy_update

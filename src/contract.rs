@@ -98,7 +98,7 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "tilled"))
         }
 
-        ExecuteMsg::Receive(msg) => receive(deps, env, info, msg),
+        ExecuteMsg::ReceiveNft(msg) => receive(deps, env, info, msg),
 
         ExecuteMsg::PlantSeed { x, y } => {
             let sender = info.sender.to_string();
