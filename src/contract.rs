@@ -57,7 +57,7 @@ pub fn execute(
             }
 
             // create a fresh farm for the user with default plots and cooldowns (None)
-            let farm_profile = FarmProfile::new();
+            let farm_profile: FarmProfile = FarmProfile::new();
 
             // save this to the users profile
             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm_profile)?;
@@ -85,11 +85,11 @@ pub fn execute(
 
             // check if the plot is already tilled
             let plot_value = farm.get_plot(x.into(), y.into());
-            if plot_value == FarmItem::Air {
-                return Err(throw_err("Plot at x,y does not exist"));
-            }
+            // if plot_value == FarmItem::Air {
+            //     return Err(throw_err("Plot at x,y does not exist"));
+            // }
 
-            if plot_value != FarmItem::Grass {
+            if plot_value != FarmItem::Meadow {
                 return Err(throw_err(&format!(
                     "Plot [{}, {}] must be grass to till",
                     x, y

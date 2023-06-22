@@ -35,7 +35,7 @@ impl FarmProfile {
         for _ in 0..initial_plots {
             let mut row = vec![];
             for _ in 0..initial_plots {
-                row.push(FarmItem::Grass);
+                row.push(FarmItem::Meadow);
             }
             plots.push(row);
         }
@@ -65,16 +65,9 @@ impl FarmProfile {
         }
 
         let row = self.plots.get(x);
-        if row.is_none() {
-            return FarmItem::Air;
-        }
-
         let col = row.unwrap().get(y);
-        if col.is_none() {
-            return FarmItem::Air;
-        } else {
-            return col.unwrap().clone();
-        }
+
+        return col.unwrap().clone();
     }
 
     pub fn set_plot(&mut self, x: usize, y: usize, value: FarmItem) {
@@ -85,13 +78,13 @@ impl FarmProfile {
     pub fn upgrade_size(&mut self, amount: usize) -> FarmProfile {
         for row in &mut self.plots {
             for _ in 0..amount {
-                row.push(FarmItem::Grass);
+                row.push(FarmItem::Meadow);
             }
         }
 
         let mut new_row = vec![];
         for _ in 0..self.get_size() + amount {
-            new_row.push(FarmItem::Grass);
+            new_row.push(FarmItem::Meadow);
         }
 
         // add 0..amount to the bottom
@@ -109,27 +102,27 @@ impl FarmProfile {
     }
 
     pub fn till(&mut self, x: usize, y: usize) -> FarmProfile {
-        if self.get_plot(x, y) == FarmItem::Grass {
-            self.set_plot(x, y, FarmItem::Dirt);
+        if self.get_plot(x, y) == FarmItem::Meadow {
+            self.set_plot(x, y, FarmItem::Field);
             println!("Tilled plot at {}, {}", x, y);
         }
         self.clone()
     }
 
     pub fn plant_seed(&mut self, x: usize, y: usize) -> FarmProfile {
-        if self.get_plot(x, y) == FarmItem::Dirt {
-            println!("Planted seed at {}, {}", x, y);
-            self.set_plot(x, y, FarmItem::WheatSeed);
-            // add to cooldown for 5 blocks. After this is up, the user can harvest
+        // if self.get_plot(x, y) == FarmItem::Field {
+        //     println!("Planted seed at {}, {}", x, y);
+        //     self.set_plot(x, y, FarmItem::WheatSeed);
+        //     // add to cooldown for 5 blocks. After this is up, the user can harvest
 
-            // where we set blockheight+amount
-            self.cooldowns.insert(
-                (x.try_into().unwrap(), y.try_into().unwrap()),
-                FarmItem::value(&FarmItem::WheatSeed),
-            );
-        } else {
-            println!("Failed to plant seed at {}, {}", x, y);
-        }
+        //     // where we set blockheight+amount
+        //     self.cooldowns.insert(
+        //         (x.try_into().unwrap(), y.try_into().unwrap()),
+        //         FarmItem::value(&FarmItem::WheatSeed),
+        //     );
+        // } else {
+        //     println!("Failed to plant seed at {}, {}", x, y);
+        // }
         self.clone()
     }
 
@@ -138,14 +131,14 @@ impl FarmProfile {
 
         let plot = self.get_plot(x, y);
 
-        if plot == FarmItem::WheatSeed {
-            println!("\nHarvested wheat at {}, {}. Setting to Dirt", x, y);
-            self.set_plot(x, y, FarmItem::Dirt);
+        // if plot == FarmItem::WheatSeed {
+        //     println!("\nHarvested wheat at {}, {}. Setting to Dirt", x, y);
+        //     self.set_plot(x, y, FarmItem::Field);
 
-            // give user wheat item here OR mint Wheat tokenfactory token
-        } else {
-            println!("Nothing to harvest at {}, {}", x, y);
-        }
+        //     // give user wheat item here OR mint Wheat tokenfactory token
+        // } else {
+        //     println!("Nothing to harvest at {}, {}", x, y);
+        // }
 
         self.clone()
     }

@@ -5,12 +5,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[derive(std::fmt::Debug, JsonSchema, PartialEq)]
 #[serde(tag = "type", content = "value")]
 pub enum FarmItem {
-    Air, // Air / Void
-    Grass,
-    Dirt,
-    WheatSeed,
-    WheatHarvestable,
-    Cow,
+    Meadow,
+    Field,
 }
 
 impl FarmItem {
@@ -18,24 +14,16 @@ impl FarmItem {
     pub fn value(&self) -> u32 {
         match *self {
             // 0 means there is no interaction cooldown
-            FarmItem::Air => 0,
-            FarmItem::Grass => 0,
-            FarmItem::Dirt => 10000,
-            FarmItem::WheatSeed => 10,
-            FarmItem::WheatHarvestable => 0,
-            FarmItem::Cow => 100,
+            FarmItem::Meadow => 0,
+            FarmItem::Field => 10000,
         }
     }
 
     pub fn pair(&self) -> FarmItem {
         match *self {
             // items which are the final form of the seed
-            FarmItem::Air => FarmItem::Air,
-            FarmItem::Grass => FarmItem::Grass,
-            FarmItem::Dirt => FarmItem::Dirt,
-            FarmItem::WheatSeed => FarmItem::WheatHarvestable,
-            FarmItem::WheatHarvestable => FarmItem::WheatHarvestable,
-            FarmItem::Cow => FarmItem::Cow, // add ReadyToMilkCow?
+            FarmItem::Meadow => FarmItem::Meadow,
+            FarmItem::Field => FarmItem::Field,
         }
     }
 }
@@ -45,12 +33,8 @@ impl Copy for FarmItem {}
 impl Clone for FarmItem {
     fn clone(&self) -> Self {
         match self {
-            FarmItem::Air => FarmItem::Air,
-            FarmItem::Grass => FarmItem::Grass,
-            FarmItem::Dirt => FarmItem::Dirt,
-            FarmItem::WheatSeed => FarmItem::WheatSeed,
-            FarmItem::WheatHarvestable => FarmItem::WheatHarvestable,
-            FarmItem::Cow => FarmItem::Cow,
+            FarmItem::Meadow => FarmItem::Meadow,
+            FarmItem::Field => FarmItem::Field,
         }
     }
 }
@@ -62,12 +46,8 @@ impl Serialize for FarmItem {
         S: Serializer,
     {
         match self {
-            FarmItem::Air => serializer.serialize_str("Air"),
-            FarmItem::Grass => serializer.serialize_str("Grass"),
-            FarmItem::Dirt => serializer.serialize_str("Dirt"),
-            FarmItem::WheatSeed => serializer.serialize_str("WheatSeed"),
-            FarmItem::WheatHarvestable => serializer.serialize_str("WheatHarvestable"),
-            FarmItem::Cow => serializer.serialize_str("Cow"),
+            FarmItem::Meadow => serializer.serialize_str("Meadow"),
+            FarmItem::Field => serializer.serialize_str("Field"),
         }
     }
 }
@@ -79,12 +59,8 @@ impl<'de> Deserialize<'de> for FarmItem {
     {
         let s = String::deserialize(deserializer)?;
         match s.as_str() {
-            "Air" => Ok(FarmItem::Air),
-            "Grass" => Ok(FarmItem::Grass),
-            "Dirt" => Ok(FarmItem::Dirt),
-            "WheatSeed" => Ok(FarmItem::WheatSeed),
-            "WheatHarvestable" => Ok(FarmItem::WheatHarvestable),
-            "Cow" => Ok(FarmItem::Cow),
+            "Meadow" => Ok(FarmItem::Meadow),
+            "Field" => Ok(FarmItem::Field),
             _ => Err(serde::de::Error::custom("invalid FarmItem")),
         }
     }
