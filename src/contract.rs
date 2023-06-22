@@ -5,6 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::farm::FarmItem;
+use crate::farm::Slot;
 use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
@@ -89,7 +90,7 @@ pub fn execute(
             //     return Err(throw_err("Plot at x,y does not exist"));
             // }
 
-            if plot_value != FarmItem::Meadow {
+            if plot_value.r#type != FarmItem::Meadow {
                 return Err(throw_err(&format!(
                     "Plot [{}, {}] must be grass to till",
                     x, y
