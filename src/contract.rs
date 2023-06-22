@@ -92,8 +92,8 @@ pub fn execute(
                     x, y
                 )));
             }
-            let updated_farm = farm.till(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+            farm.till(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
             Ok(Response::new().add_attribute("action", "tilled"))
         }
@@ -117,8 +117,8 @@ pub fn execute(
                 )));
             }
 
-            let updated_farm = farm.plant_seed(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+            farm.plant_seed(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
             Ok(Response::new().add_attribute("action", "planted"))
         }
@@ -148,8 +148,8 @@ pub fn execute(
                 )));
             }
 
-            let updated_farm = farm.water_plant(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+            farm.water_plant(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
             Ok(Response::new().add_attribute("action", "watered"))
         }
@@ -179,8 +179,8 @@ pub fn execute(
                 )));
             }
 
-            let updated_farm = farm.harvest(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+            farm.harvest(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
             Ok(Response::new().add_attribute("action", "harvested"))
         }

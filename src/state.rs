@@ -85,7 +85,7 @@ impl FarmProfile {
         self.plots[x][y] = value;
     }
 
-    pub fn upgrade_size(&mut self, amount: usize) -> FarmProfile {
+    pub fn upgrade_size(&mut self, amount: usize) {
         for row in &mut self.plots {
             for _ in 0..amount {
                 row.push(create_meadow_plot());
@@ -106,19 +106,16 @@ impl FarmProfile {
             self.get_size(),
             self.get_size()
         );
-
-        self.clone()
     }
 
-    pub fn till(&mut self, x: usize, y: usize) -> FarmProfile {
+    pub fn till(&mut self, x: usize, y: usize) {
         if self.get_plot(x, y).r#type == SlotType::Meadow {
             self.set_plot(x, y, create_field_plot());
             println!("Tilled plot at {}, {}", x, y);
         }
-        self.clone()
     }
 
-    pub fn plant_seed(&mut self, x: usize, y: usize) -> FarmProfile {
+    pub fn plant_seed(&mut self, x: usize, y: usize) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         if plot.r#type == SlotType::Field && plant.is_none() {
@@ -131,11 +128,9 @@ impl FarmProfile {
                 },
             );
         }
-
-        self.clone()
     }
 
-    pub fn water_plant(&mut self, x: usize, y: usize) -> FarmProfile {
+    pub fn water_plant(&mut self, x: usize, y: usize) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         let updated_plant = plant.map(|p| {
@@ -157,11 +152,9 @@ impl FarmProfile {
                 ..plot
             },
         );
-
-        self.clone()
     }
 
-    pub fn harvest(&mut self, x: usize, y: usize) -> FarmProfile {
+    pub fn harvest(&mut self, x: usize, y: usize) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         let updated_plant = plant.map(|p| {
@@ -180,7 +173,5 @@ impl FarmProfile {
                 ..plot
             },
         );
-
-        self.clone()
     }
 }
