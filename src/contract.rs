@@ -122,6 +122,37 @@ pub fn execute(
 
             Ok(Response::new().add_attribute("action", "planted"))
         }
+
+        ExecuteMsg::WaterPlant { x, y } => {
+            let sender = info.sender.to_string();
+            let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
+            if farm.is_none() {
+                return Err(throw_err("You do not have a farm"));
+            }
+
+            let mut farm = farm.unwrap();
+            let plot = farm.get_plot(x.into(), y.into());
+            let plant = plot.plant;
+            if plant.is_none() {
+                return Err(throw_err(&format!(
+                    "Plot [{}, {}] must contain a plant to water.",
+                    x, y
+                )));
+            }
+
+            let uplant = plant.unwrap();
+            if uplant.current_stage >= uplant.stages {
+                return Err(throw_err(&format!(
+                    "Plant [{}, {}] is fully grown and cannot be watered anymore.",
+                    x, y
+                )));
+            }
+
+            let updated_farm = farm.water_plant(x.into(), y.into());
+            FARM_PROFILES.save(deps.storage, sender.as_str(), &updated_farm)?;
+
+            Ok(Response::new().add_attribute("action", "watered"))
+        }
     }
 }
 

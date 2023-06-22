@@ -136,4 +136,30 @@ impl FarmProfile {
 
         self.clone()
     }
+
+    pub fn water_plant(&mut self, x: usize, y: usize) -> FarmProfile {
+        let plot = self.get_plot(x, y);
+        let plant = plot.plant;
+        let updated_plant = plant.map(|p| {
+            if p.stages > p.current_stage {
+                return Plant {
+                    current_stage: p.current_stage + 1,
+                    ..p
+                };
+            }
+
+            p
+        });
+
+        self.set_plot(
+            x,
+            y,
+            Slot {
+                plant: updated_plant,
+                ..plot
+            },
+        );
+
+        self.clone()
+    }
 }
