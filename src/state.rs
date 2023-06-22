@@ -8,19 +8,12 @@ use crate::{
     msg::ContractInformationResponse,
 };
 
-type Cooldowns = BTreeMap<(i32, i32), u32>;
-
 #[cw_serde]
 pub struct FarmProfile {
     plots: Vec<Vec<Slot>>,
-    cooldowns: Cooldowns,
 }
 
-// addresss: FarmProfile
-
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
-
-// Config configuration Information
 pub const INFORMATION: Item<ContractInformationResponse> = Item::new("info");
 
 fn create_meadow_plot() -> Slot {
@@ -55,10 +48,7 @@ impl FarmProfile {
             plots.push(row);
         }
 
-        FarmProfile {
-            plots,
-            cooldowns: Cooldowns::new(),
-        }
+        FarmProfile { plots }
     }
 
     pub fn get_size(&self) -> usize {
@@ -100,7 +90,6 @@ impl FarmProfile {
             new_row.push(create_meadow_plot());
         }
 
-        // add 0..amount to the bottom
         for _ in 0..amount {
             self.plots.push(new_row.clone());
         }
