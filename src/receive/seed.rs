@@ -4,13 +4,14 @@ use crate::{state::INFORMATION, ContractError};
 
 pub fn seed(
     deps: DepsMut,
-    env: Env,
-    sender: String,
-    token_id: String,
+    _env: Env,
+    _sender: String,
+    _token_id: String,
+    token_type: String,
 ) -> Result<Response, ContractError> {
-    let information = INFORMATION.load(deps.storage)?;
+    let _information = INFORMATION.load(deps.storage)?;
 
-    Ok(Response::new().add_attributes(vec![("method", "seed")]))
+    Ok(Response::new().add_attributes(vec![("method", "seed"), ("token_type", &token_type)]))
 }
 
 #[cfg(test)]

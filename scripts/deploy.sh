@@ -34,7 +34,8 @@ function instantiate {
   local instantiate_msg
   instantiate_msg=$(cat <<-END
       {
-        "admin": "%s"
+        "admin": "%s",
+        "whitelisted_collections": ["juno15yu4p7j0e65vsazt08mdlzzezsps3wenrtuukjaxduzjhet2mw0qf4p0kk"]
       }
 END
   )
@@ -80,5 +81,5 @@ function deploy_update {
   migrate "${code_id}" "${contract_addr}"
 }
 
-# deploy_new
-deploy_update
+deploy_new
+# deploy_update
