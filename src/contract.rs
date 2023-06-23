@@ -80,22 +80,23 @@ pub fn execute(
         ExecuteMsg::TillGround { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
-            if farm.is_none() {
-                return Err(throw_err("You do not have a farm"));
-            }
 
-            let mut farm = farm.unwrap();
-            let plot_value = farm.get_plot(x.into(), y.into());
-            if plot_value.r#type != SlotType::Meadow {
-                return Err(throw_err(&format!(
-                    "Plot [{}, {}] must be meadow to till",
-                    x, y
-                )));
-            }
-            farm.till(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+            return match farm {
+                None => Err(throw_err("You do not have a farm")),
+                Some(mut farm) => {
+                    let plot_value = farm.get_plot(x.into(), y.into());
+                    if plot_value.r#type != SlotType::Meadow {
+                        return Err(throw_err(&format!(
+                            "Plot [{}, {}] must be meadow to till",
+                            x, y
+                        )));
+                    }
+                    farm.till(x.into(), y.into());
+                    FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-            Ok(Response::new().add_attribute("action", "tilled"))
+                    Ok(Response::new().add_attribute("action", "tilled"))
+                }
+            };
         }
 
         ExecuteMsg::ReceiveNft(msg) => receive(deps, env, info, msg),
@@ -103,86 +104,91 @@ pub fn execute(
         ExecuteMsg::PlantSeed { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
-            if farm.is_none() {
-                return Err(throw_err("You do not have a farm"));
-            }
 
-            let mut farm = farm.unwrap();
-            let plot = farm.get_plot(x.into(), y.into());
-            let plant = plot.plant;
-            if plot.r#type != SlotType::Field || plant.is_some() {
-                return Err(throw_err(&format!(
-                    "Plot [{}, {}] must be an empty field to plant a seed.",
-                    x, y
-                )));
-            }
+            return match farm {
+                None => return Err(throw_err("You do not have a farm")),
+                Some(mut farm) => {
+                    let plot = farm.get_plot(x.into(), y.into());
+                    let plant = plot.plant;
+                    if plot.r#type != SlotType::Field || plant.is_some() {
+                        return Err(throw_err(&format!(
+                            "Plot [{}, {}] must be an empty field to plant a seed.",
+                            x, y
+                        )));
+                    }
 
-            farm.plant_seed(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+                    farm.plant_seed(x.into(), y.into());
+                    FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-            Ok(Response::new().add_attribute("action", "planted"))
+                    Ok(Response::new().add_attribute("action", "planted"))
+                }
+            };
         }
 
         ExecuteMsg::WaterPlant { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
-            if farm.is_none() {
-                return Err(throw_err("You do not have a farm"));
-            }
 
-            let mut farm = farm.unwrap();
-            let plot = farm.get_plot(x.into(), y.into());
-            let plant = plot.plant;
-            if plant.is_none() {
-                return Err(throw_err(&format!(
-                    "Plot [{}, {}] must contain a plant to water.",
-                    x, y
-                )));
-            }
+            return match farm {
+                None => Err(throw_err("You do not have a farm")),
+                Some(mut farm) => {
+                    let plot = farm.get_plot(x.into(), y.into());
+                    let plant = plot.plant;
 
-            let uplant = plant.unwrap();
-            if uplant.current_stage >= uplant.stages {
-                return Err(throw_err(&format!(
-                    "Plant [{}, {}] is fully grown and cannot be watered anymore.",
-                    x, y
-                )));
-            }
+                    return match plant {
+                        None => Err(throw_err(&format!(
+                            "Plot [{}, {}] must contain a plant to water.",
+                            x, y
+                        ))),
+                        Some(plant) => {
+                            if plant.current_stage >= plant.stages {
+                                return Err(throw_err(&format!(
+                                    "Plant [{}, {}] is fully grown and cannot be watered anymore.",
+                                    x, y
+                                )));
+                            }
 
-            farm.water_plant(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+                            farm.water_plant(x.into(), y.into());
+                            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-            Ok(Response::new().add_attribute("action", "watered"))
+                            Ok(Response::new().add_attribute("action", "watered"))
+                        }
+                    };
+                }
+            };
         }
 
         ExecuteMsg::Harvest { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
-            if farm.is_none() {
-                return Err(throw_err("You do not have a farm"));
-            }
 
-            let mut farm = farm.unwrap();
-            let plot = farm.get_plot(x.into(), y.into());
-            let plant = plot.plant;
-            if plant.is_none() {
-                return Err(throw_err(&format!(
-                    "Plot [{}, {}] must contain a plant to harvest.",
-                    x, y
-                )));
-            }
+            return match farm {
+                None => Err(throw_err("You do not have a farm")),
+                Some(mut farm) => {
+                    let plot = farm.get_plot(x.into(), y.into());
+                    let plant = plot.plant;
 
-            let uplant = plant.unwrap();
-            if uplant.current_stage != uplant.stages {
-                return Err(throw_err(&format!(
-                    "Plant [{}, {}] must be fully grown to harvest it.",
-                    x, y
-                )));
-            }
+                    return match plant {
+                        None => Err(throw_err(&format!(
+                            "Plot [{}, {}] must contain a plant to harvest.",
+                            x, y
+                        ))),
+                        Some(plant) => {
+                            if plant.current_stage != plant.stages {
+                                return Err(throw_err(&format!(
+                                    "Plant [{}, {}] must be fully grown to harvest it.",
+                                    x, y
+                                )));
+                            }
 
-            farm.harvest(x.into(), y.into());
-            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+                            farm.harvest(x.into(), y.into());
+                            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-            Ok(Response::new().add_attribute("action", "harvested"))
+                            Ok(Response::new().add_attribute("action", "harvested"))
+                        }
+                    };
+                }
+            };
         }
     }
 }
