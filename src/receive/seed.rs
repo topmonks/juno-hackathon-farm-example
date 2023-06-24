@@ -1,17 +1,42 @@
 use cosmwasm_std::{DepsMut, Env, Response};
 
-use crate::{state::INFORMATION, ContractError};
+use crate::{
+    farm::{PlantType, SlotType},
+    helpers::throw_err,
+    state::FARM_PROFILES,
+    ContractError,
+};
 
 pub fn seed(
     deps: DepsMut,
     _env: Env,
-    _sender: String,
+    sender: String,
     _token_id: String,
-    token_type: String,
+    plant_type: PlantType,
+    x: u8,
+    y: u8,
 ) -> Result<Response, ContractError> {
-    let _information = INFORMATION.load(deps.storage)?;
+    let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
 
-    Ok(Response::new().add_attributes(vec![("method", "seed"), ("token_type", &token_type)]))
+    if farm.is_none() {
+        return Err(ContractError::PlayerDoesNotExist { address: sender });
+    }
+
+    let mut farm = farm.unwrap();
+
+    let plot = farm.get_plot(x.into(), y.into());
+    let plant = plot.plant;
+    if plot.r#type != SlotType::Field || plant.is_some() {
+        return Err(throw_err(&format!(
+            "Plot [{}, {}] must be an empty field to plant a seed.",
+            x, y
+        )));
+    }
+
+    farm.plant_seed(x.into(), y.into(), &plant_type);
+    FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+
+    Ok(Response::new().add_attribute("action", "seed"))
 }
 
 #[cfg(test)]

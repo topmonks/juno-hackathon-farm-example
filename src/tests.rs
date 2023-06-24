@@ -1,13 +1,13 @@
-use crate::contract::instantiate;
+use crate::contract::{execute, instantiate};
 
-use crate::msg::{InstantiateMsg, KompleAddrs};
+use crate::msg::{ExecuteMsg, InstantiateMsg, KompleAddrs};
 use crate::state::INFORMATION;
 
 use cosmwasm_std::testing::{
     mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage,
 };
 use cosmwasm_std::{
-    to_binary, Addr, Env, OwnedDeps, QuerierResult, SystemError, SystemResult, WasmQuery,
+    to_binary, Addr, DepsMut, Env, OwnedDeps, QuerierResult, SystemError, SystemResult, WasmQuery,
 };
 use komple_framework_metadata_module::msg::MetadataResponse;
 use komple_framework_metadata_module::state::{MetaInfo, Metadata};
@@ -36,6 +36,20 @@ pub fn setup_test(
     }
 
     (dependencies, env)
+}
+
+pub fn init_farm(addr: &str, deps: DepsMut) -> () {
+    let msg = ExecuteMsg::Start {};
+    let info = mock_info(addr, &vec![]);
+
+    let _res = execute(deps, mock_env(), info, msg).unwrap();
+}
+
+pub fn till(addr: &str, x: u8, y: u8, deps: DepsMut) -> () {
+    let msg = ExecuteMsg::TillGround { x, y };
+    let info = mock_info(addr, &vec![]);
+
+    let _res = execute(deps, mock_env(), info, msg).unwrap();
 }
 
 pub fn general_handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {

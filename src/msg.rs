@@ -18,7 +18,6 @@ pub enum ExecuteMsg {
     Start {},
     Stop {},
     TillGround { x: u8, y: u8 },
-    PlantSeed { x: u8, y: u8 },
     WaterPlant { x: u8, y: u8 },
     Harvest { x: u8, y: u8 },
     ReceiveNft(Cw721ReceiveMsg),
@@ -26,7 +25,7 @@ pub enum ExecuteMsg {
 
 #[cw_serde]
 pub enum Cw721HookMsg {
-    Seed {},
+    Seed { x: u8, y: u8 },
 }
 
 #[cw_serde]

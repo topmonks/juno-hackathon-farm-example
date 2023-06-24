@@ -26,6 +26,9 @@ pub enum ContractError {
     #[error("You have already bought this asset: {name}")]
     AssetAlreadyPurchased { name: String },
 
+    #[error("Uknown plant: {name}")]
+    UnknownPlant { name: String },
+
     #[error("You do not have enough points: balance={received:?},required={required:?}. MaxYouCanBuy={max_amount:?}")]
     NotEnoughPoints {
         received: u128,

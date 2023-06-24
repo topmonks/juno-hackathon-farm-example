@@ -101,30 +101,6 @@ pub fn execute(
 
         ExecuteMsg::ReceiveNft(msg) => receive(deps, env, info, msg),
 
-        ExecuteMsg::PlantSeed { x, y } => {
-            let sender = info.sender.to_string();
-            let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
-
-            return match farm {
-                None => return Err(throw_err("You do not have a farm")),
-                Some(mut farm) => {
-                    let plot = farm.get_plot(x.into(), y.into());
-                    let plant = plot.plant;
-                    if plot.r#type != SlotType::Field || plant.is_some() {
-                        return Err(throw_err(&format!(
-                            "Plot [{}, {}] must be an empty field to plant a seed.",
-                            x, y
-                        )));
-                    }
-
-                    farm.plant_seed(x.into(), y.into());
-                    FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
-
-                    Ok(Response::new().add_attribute("action", "planted"))
-                }
-            };
-        }
-
         ExecuteMsg::WaterPlant { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;

@@ -30,13 +30,21 @@ fn create_field_plot() -> Slot {
     };
 }
 
-fn create_sunflower_plant() -> Plant {
-    return Plant {
-        r#type: PlantType::Sunflower,
-        stages: 5,
-        current_stage: 1,
-        dead: false,
-    };
+fn create_plant(plant_type: &PlantType) -> Plant {
+    match plant_type {
+        PlantType::Sunflower => Plant {
+            r#type: PlantType::Sunflower,
+            stages: 5,
+            current_stage: 1,
+            dead: false,
+        },
+        PlantType::Wheat => Plant {
+            r#type: PlantType::Wheat,
+            stages: 5,
+            current_stage: 1,
+            dead: false,
+        },
+    }
 }
 
 impl FarmProfile {
@@ -115,7 +123,7 @@ impl FarmProfile {
         }
     }
 
-    pub fn plant_seed(&mut self, x: usize, y: usize) {
+    pub fn plant_seed(&mut self, x: usize, y: usize, plant_type: &PlantType) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         if plot.r#type == SlotType::Field && plant.is_none() {
@@ -123,7 +131,7 @@ impl FarmProfile {
                 x,
                 y,
                 Slot {
-                    plant: Some(create_sunflower_plant()),
+                    plant: Some(create_plant(plant_type)),
                     ..plot
                 },
             );

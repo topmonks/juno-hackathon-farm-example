@@ -59,16 +59,10 @@ pub fn receive(
         return Err(throw_err(&format!("Missing metadata type",)));
     }
 
-    let token_type = token_type.unwrap();
+    let token_type = token_type.unwrap().value.parse()?;
 
     match from_binary(&msg.msg)? {
-        Cw721HookMsg::Seed {} => seed(
-            deps,
-            env,
-            msg.sender,
-            msg.token_id,
-            token_type.value.to_owned(),
-        ),
+        Cw721HookMsg::Seed { x, y } => seed(deps, env, msg.sender, msg.token_id, token_type, x, y),
     }
 }
 
@@ -85,7 +79,7 @@ mod test {
     use crate::{
         contract::execute,
         msg::{Cw721HookMsg, ExecuteMsg, InstantiateMsg},
-        tests::{general_handle_wasm_query, get_komple_addrs, setup_test},
+        tests::{general_handle_wasm_query, get_komple_addrs, init_farm, setup_test, till},
     };
 
     #[test]
@@ -102,7 +96,7 @@ mod test {
         let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg {
             sender: nft_owner.to_string(),
             token_id: "1".to_string(),
-            msg: to_binary(&Cw721HookMsg::Seed {}).unwrap(),
+            msg: to_binary(&Cw721HookMsg::Seed { x: 0, y: 0 }).unwrap(),
         });
 
         let res = execute(deps.as_mut(), env.to_owned(), auth_info, msg).unwrap();
@@ -163,16 +157,17 @@ mod test {
 
         let auth_info = mock_info(collection_addr, &vec![]);
         let nft_owner = "nft_owner";
+        init_farm(nft_owner, deps.as_mut());
+        till(nft_owner, 0, 0, deps.as_mut());
+
         let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg {
             sender: nft_owner.to_string(),
             token_id: "1".to_string(),
-            msg: to_binary(&Cw721HookMsg::Seed {}).unwrap(),
+            msg: to_binary(&Cw721HookMsg::Seed { x: 0, y: 0 }).unwrap(),
         });
 
         let res = execute(deps.as_mut(), env.to_owned(), auth_info, msg);
 
-        res.unwrap();
-
-        // assert_eq!(res.is_ok(), true);
+        assert_eq!(res.is_ok(), true);
     }
 }
