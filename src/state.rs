@@ -49,7 +49,7 @@ fn create_plant(plant_type: &PlantType) -> Plant {
 
 impl FarmProfile {
     pub fn new() -> Self {
-        let initial_plots = 3;
+        let initial_plots = 9;
 
         let mut plots = vec![];
         for _ in 0..initial_plots {
