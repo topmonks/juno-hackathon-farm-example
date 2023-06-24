@@ -1,6 +1,6 @@
 use crate::contract::{execute, instantiate};
 
-use crate::msg::{ExecuteMsg, InstantiateMsg, KompleAddrs};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::INFORMATION;
 
 use cosmwasm_std::testing::{
@@ -12,9 +12,14 @@ use cosmwasm_std::{
 use komple_framework_metadata_module::msg::MetadataResponse;
 use komple_framework_metadata_module::state::{MetaInfo, Metadata};
 
+pub struct KompleAddrs {
+    pub metadata: Addr,
+    pub mint: Addr,
+}
 pub fn get_komple_addrs() -> KompleAddrs {
     KompleAddrs {
         metadata: Addr::unchecked("komple_metadata"),
+        mint: Addr::unchecked("komple_mint"),
     }
 }
 
@@ -95,6 +100,7 @@ fn proper_initialization() {
     let msg = InstantiateMsg {
         admin: None,
         whitelisted_collections: None,
+        komple_mint_addr: None,
     };
     let info = mock_info("creator", &vec![]);
 

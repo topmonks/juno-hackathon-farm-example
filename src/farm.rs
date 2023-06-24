@@ -40,11 +40,18 @@ impl ToString for PlantType {
 }
 
 #[cw_serde]
+pub struct KomplePlant {
+    pub metadata_id: u32,
+    pub collection_id: u32,
+}
+
+#[cw_serde]
 pub struct Plant {
     pub r#type: PlantType,
     pub current_stage: u8,
     pub stages: u8,
     pub dead: bool,
+    pub komple: Option<KomplePlant>,
 }
 
 #[cw_serde]

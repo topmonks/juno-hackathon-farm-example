@@ -1,7 +1,7 @@
 use cosmwasm_std::{DepsMut, Env, Response};
 
 use crate::{
-    farm::{PlantType, SlotType},
+    farm::{KomplePlant, PlantType, SlotType},
     helpers::throw_err,
     state::FARM_PROFILES,
     ContractError,
@@ -13,6 +13,7 @@ pub fn seed(
     sender: String,
     _token_id: String,
     plant_type: PlantType,
+    komple: KomplePlant,
     x: u8,
     y: u8,
 ) -> Result<Response, ContractError> {
@@ -33,7 +34,7 @@ pub fn seed(
         )));
     }
 
-    farm.plant_seed(x.into(), y.into(), &plant_type);
+    farm.plant_seed(x.into(), y.into(), &plant_type, Some(komple));
     FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
     Ok(Response::new().add_attribute("action", "seed"))

@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cw_storage_plus::{Item, Map};
 
 use crate::{
-    farm::{Plant, PlantType, Slot, SlotType},
+    farm::{KomplePlant, Plant, PlantType, Slot, SlotType},
     msg::ContractInformationResponse,
 };
 
@@ -30,19 +30,21 @@ fn create_field_plot() -> Slot {
     };
 }
 
-fn create_plant(plant_type: &PlantType) -> Plant {
+fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>) -> Plant {
     match plant_type {
         PlantType::Sunflower => Plant {
             r#type: PlantType::Sunflower,
             stages: 5,
             current_stage: 1,
             dead: false,
+            komple,
         },
         PlantType::Wheat => Plant {
             r#type: PlantType::Wheat,
             stages: 5,
             current_stage: 1,
             dead: false,
+            komple,
         },
     }
 }
@@ -123,7 +125,13 @@ impl FarmProfile {
         }
     }
 
-    pub fn plant_seed(&mut self, x: usize, y: usize, plant_type: &PlantType) {
+    pub fn plant_seed(
+        &mut self,
+        x: usize,
+        y: usize,
+        plant_type: &PlantType,
+        komple: Option<KomplePlant>,
+    ) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         if plot.r#type == SlotType::Field && plant.is_none() {
@@ -131,7 +139,7 @@ impl FarmProfile {
                 x,
                 y,
                 Slot {
-                    plant: Some(create_plant(plant_type)),
+                    plant: Some(create_plant(plant_type, komple)),
                     ..plot
                 },
             );

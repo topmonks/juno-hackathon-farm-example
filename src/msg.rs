@@ -7,7 +7,8 @@ use crate::state::FarmProfile;
 #[cw_serde]
 pub struct InstantiateMsg {
     pub admin: Option<String>,
-    pub whitelisted_collections: Option<Vec<Addr>>,
+    pub komple_mint_addr: Option<String>,
+    pub whitelisted_collections: Option<Vec<KompleCollection>>,
 }
 
 #[cw_serde]
@@ -29,11 +30,6 @@ pub enum Cw721HookMsg {
 }
 
 #[cw_serde]
-pub struct KompleAddrs {
-    pub metadata: Addr,
-}
-
-#[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(ContractInformationResponse)]
@@ -46,7 +42,14 @@ pub enum QueryMsg {
 
 // === RESPONSES ===
 #[cw_serde]
+pub struct KompleCollection {
+    pub addr: Addr,
+    pub id: u32,
+}
+
+#[cw_serde]
 pub struct ContractInformationResponse {
     pub admin: String,
-    pub whitelisted_collections: Vec<Addr>,
+    pub whitelisted_collections: Vec<KompleCollection>,
+    pub komple_mint_addr: Option<String>,
 }

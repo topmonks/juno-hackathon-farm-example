@@ -1,7 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult, WasmMsg,
+};
 use cw2::set_contract_version;
+use komple_framework_mint_module::msg::ExecuteMsg as KompleMintExecuteMsg;
 
 use crate::error::ContractError;
 use crate::farm::SlotType;
@@ -33,6 +36,7 @@ pub fn instantiate(
         &ContractInformationResponse {
             admin,
             whitelisted_collections,
+            komple_mint_addr: msg.komple_mint_addr,
         },
     )?;
 
@@ -156,11 +160,34 @@ pub fn execute(
                                     x, y
                                 )));
                             }
+                            let information = INFORMATION.load(deps.storage)?;
+
+                            let mut messages: Vec<CosmosMsg> = vec![];
+
+                            if let Some(komple_mint_addr) = information.komple_mint_addr {
+                                if let Some(komple) = plant.komple {
+                                    let admin_mint_nft = WasmMsg::Execute {
+                                        contract_addr: komple_mint_addr,
+                                        msg: to_binary::<KompleMintExecuteMsg>(
+                                            &KompleMintExecuteMsg::AdminMint {
+                                                collection_id: komple.collection_id,
+                                                recipient: info.sender.into_string(),
+                                                metadata_id: Some(komple.metadata_id),
+                                            },
+                                        )?,
+                                        funds: vec![],
+                                    };
+
+                                    messages.push(admin_mint_nft.into());
+                                }
+                            }
 
                             farm.harvest(x.into(), y.into());
                             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-                            Ok(Response::new().add_attribute("action", "harvested"))
+                            Ok(Response::new()
+                                .add_attribute("action", "harvested")
+                                .add_messages(messages))
                         }
                     };
                 }

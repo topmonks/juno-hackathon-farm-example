@@ -681,6 +681,7 @@ dependencies = [
  "cw721 0.17.0",
  "cw721-base 0.17.0",
  "komple-framework-metadata-module",
+ "komple-framework-mint-module",
  "komple-framework-token-module",
  "komple-framework-types",
  "schemars",
@@ -701,6 +702,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-framework-fee-module"
+version = "1.1.1-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "642e64c1e48c303c82f4ee3a904a4b5ecc75310abe515f1cf7b525f4b607f979"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw2 0.15.1",
+ "cw20",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "thiserror",
+]
+
+[[package]]
 name = "komple-framework-metadata-module"
 version = "1.1.1-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -710,6 +728,47 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-storage-plus 0.15.1",
+ "cw2 0.15.1",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-mint-module"
+version = "1.1.1-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a1087cd807dcf8be611d63ed73cb1048ac0c8d344e68b72af79da5dfa5b4614"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "cw2 0.15.1",
+ "cw20",
+ "komple-framework-fee-module",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "komple-framework-whitelist-module",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-permission-module"
+version = "1.1.1-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09a90f77279081e7909dfb53de841ffa549f2138f29957e5a7f9383507705219"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
  "cw2 0.15.1",
  "komple-framework-types",
  "komple-framework-utils",

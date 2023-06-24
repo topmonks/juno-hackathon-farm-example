@@ -9,7 +9,9 @@ use komple_framework_token_module::msg::QueryMsg as KompleTokenQueryMsg;
 use komple_framework_types::{modules::token::SubModules, shared::query::ResponseWrapper};
 use seed::seed;
 
-use crate::{helpers::throw_err, msg::Cw721HookMsg, state::INFORMATION, ContractError};
+use crate::{
+    farm::KomplePlant, helpers::throw_err, msg::Cw721HookMsg, state::INFORMATION, ContractError,
+};
 
 pub fn receive(
     deps: DepsMut,
@@ -22,7 +24,7 @@ pub fn receive(
     let collection = config
         .whitelisted_collections
         .iter()
-        .find(|c| info.sender.eq(c));
+        .find(|c| info.sender.eq(&c.addr));
 
     if collection.is_none() {
         return Err(throw_err(&format!("Unauthorized collection",)));
@@ -31,7 +33,7 @@ pub fn receive(
     let collection = collection.unwrap();
 
     let submodules: ResponseWrapper<SubModules> = deps.querier.query_wasm_smart(
-        collection,
+        &collection.addr,
         &Cw721QueryMsg::Extension {
             msg: KompleTokenQueryMsg::SubModules {},
         },
@@ -48,21 +50,35 @@ pub fn receive(
         },
     )?;
 
-    let token_type = metadata
+    let plant_type = metadata
         .data
         .metadata
         .attributes
         .iter()
         .find(|a| a.trait_type == "type");
 
-    if token_type.is_none() {
+    if plant_type.is_none() {
         return Err(throw_err(&format!("Missing metadata type",)));
     }
 
-    let token_type = token_type.unwrap().value.parse()?;
+    let plant_type = plant_type.unwrap().value.parse()?;
+
+    let komple = KomplePlant {
+        metadata_id: metadata.data.metadata_id,
+        collection_id: collection.id,
+    };
 
     match from_binary(&msg.msg)? {
-        Cw721HookMsg::Seed { x, y } => seed(deps, env, msg.sender, msg.token_id, token_type, x, y),
+        Cw721HookMsg::Seed { x, y } => seed(
+            deps,
+            env,
+            msg.sender,
+            msg.token_id,
+            plant_type,
+            komple,
+            x,
+            y,
+        ),
     }
 }
 
@@ -78,7 +94,7 @@ mod test {
 
     use crate::{
         contract::execute,
-        msg::{Cw721HookMsg, ExecuteMsg, InstantiateMsg},
+        msg::{Cw721HookMsg, ExecuteMsg, InstantiateMsg, KompleCollection},
         tests::{general_handle_wasm_query, get_komple_addrs, init_farm, setup_test, till},
     };
 
@@ -88,6 +104,7 @@ mod test {
         let (mut deps, env) = setup_test(Some(InstantiateMsg {
             admin: None,
             whitelisted_collections: None,
+            komple_mint_addr: None,
         }));
 
         let collection_addr = "collection_addr";
@@ -109,7 +126,11 @@ mod test {
         let collection_addr = "collection_addr";
         let (mut deps, env) = setup_test(Some(InstantiateMsg {
             admin: None,
-            whitelisted_collections: Some(vec![Addr::unchecked(collection_addr)]),
+            whitelisted_collections: Some(vec![KompleCollection {
+                addr: Addr::unchecked(collection_addr),
+                id: 1,
+            }]),
+            komple_mint_addr: None,
         }));
 
         deps.querier

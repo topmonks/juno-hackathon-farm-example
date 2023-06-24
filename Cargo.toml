@@ -48,6 +48,7 @@ cw2 = "1.0.1"
 cw721 = "0.17.0"
 cw721-base = "0.17.0"
 komple-framework-metadata-module = { version = "1.1.1-beta", features = ["library"] }
+komple-framework-mint-module = { version = "1.1.1-beta", features = ["library"] }
 komple-framework-token-module = { version = "1.1.1-beta", features = ["library"] }
 komple-framework-types = "1.1.1-beta"
 schemars = "0.8.10"
