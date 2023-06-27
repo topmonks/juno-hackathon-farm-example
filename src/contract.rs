@@ -12,7 +12,7 @@ use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, Migrat
 
 use crate::helpers::throw_err;
 use crate::receive::receive;
-use crate::state::{FarmProfile, FARM_PROFILES, INFORMATION};
+use crate::state::{farm_profile_dto, FarmProfile, FARM_PROFILES, INFORMATION};
 
 const CONTRACT_NAME: &str = "crates.io:farm_template";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -107,7 +107,8 @@ pub fn execute(
 
         ExecuteMsg::WaterPlant { x, y } => {
             let sender = info.sender.to_string();
-            let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
+            let farm: Option<FarmProfile> =
+                FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
 
             return match farm {
                 None => Err(throw_err("You do not have a farm")),
@@ -121,14 +122,28 @@ pub fn execute(
                             x, y
                         ))),
                         Some(plant) => {
-                            if plant.current_stage >= plant.stages {
+                            if !plant.can_water(env.block.height) {
+                                if plant.can_harvest(env.block.height) {
+                                    return Err(throw_err(&format!(
+                                        "Plant [{}, {}] is fully grown and cannot be watered anymore.",
+                                        x, y
+                                    )));
+                                }
+
+                                if plant.is_dead(env.block.height) {
+                                    return Err(throw_err(&format!(
+                                        "Plant [{}, {}] is dead and cannot be watered anymore.",
+                                        x, y
+                                    )));
+                                }
+
                                 return Err(throw_err(&format!(
-                                    "Plant [{}, {}] is fully grown and cannot be watered anymore.",
+                                    "Plant [{}, {}] cannot be watered.",
                                     x, y
                                 )));
                             }
 
-                            farm.water_plant(x.into(), y.into());
+                            farm.water_plant(x.into(), y.into(), env.block.height);
                             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
                             Ok(Response::new().add_attribute("action", "watered"))
@@ -154,9 +169,9 @@ pub fn execute(
                             x, y
                         ))),
                         Some(plant) => {
-                            if plant.current_stage != plant.stages {
+                            if !plant.can_harvest(env.block.height) {
                                 return Err(throw_err(&format!(
-                                    "Plant [{}, {}] must be fully grown to harvest it.",
+                                    "Plant [{}, {}] must be fully grown and watered to harvest it.",
                                     x, y
                                 )));
                             }
@@ -182,7 +197,7 @@ pub fn execute(
                                 }
                             }
 
-                            farm.harvest(x.into(), y.into());
+                            farm.harvest(x.into(), y.into(), env.block.height);
                             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
                             Ok(Response::new()
@@ -197,7 +212,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::ContractInfo {} => {
             let info = INFORMATION.load(deps.storage)?;
@@ -205,8 +220,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             Ok(v)
         }
         QueryMsg::GetFarmProfile { address } => {
-            let farms = FARM_PROFILES.may_load(deps.storage, address.as_str())?;
-            let v = to_binary(&farms)?;
+            let farm = FARM_PROFILES.may_load(deps.storage, address.as_str())?;
+            let farm_dto = farm_profile_dto(&farm, env.block.height);
+
+            // get possible actions
+            let v = to_binary(&farm_dto)?;
             Ok(v)
         }
     }

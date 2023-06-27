@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw721::Cw721ReceiveMsg;
 
-use crate::state::FarmProfile;
+use crate::state::FarmProfileDto;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -36,7 +36,7 @@ pub enum QueryMsg {
     ContractInfo {},
 
     // Returns a specific users farm profile from state via query
-    #[returns(FarmProfile)]
+    #[returns(FarmProfileDto)]
     GetFarmProfile { address: String },
 }
 

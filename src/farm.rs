@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, thread::current};
 
 use cosmwasm_schema::cw_serde;
 
@@ -48,10 +48,40 @@ pub struct KomplePlant {
 #[cw_serde]
 pub struct Plant {
     pub r#type: PlantType,
-    pub current_stage: u8,
-    pub stages: u8,
-    pub dead: bool,
+    pub stages: u64,
+    pub growth_period: u64,
+    pub created_at: u64,
+    pub watered_at: Vec<u64>,
     pub komple: Option<KomplePlant>,
+}
+
+impl Plant {
+    pub fn get_current_stage(&self, block: u64) -> u64 {
+        let passed_time = block - self.created_at;
+        let current_period = passed_time / self.growth_period + 1;
+
+        current_period
+    }
+
+    pub fn is_dead(&self, block: u64) -> bool {
+        let watered_stages: u64 = self.watered_at.len().try_into().unwrap();
+        let current_stage = self.get_current_stage(block);
+
+        watered_stages + 1 < current_stage
+    }
+
+    pub fn can_water(&self, block: u64) -> bool {
+        let watered_stages: u64 = self.watered_at.len().try_into().unwrap();
+        let current_stage = self.get_current_stage(block);
+
+        watered_stages < self.stages && watered_stages == current_stage - 1
+    }
+
+    pub fn can_harvest(&self, _block: u64) -> bool {
+        let watered_stages: u64 = self.watered_at.len().try_into().unwrap();
+
+        watered_stages == self.stages
+    }
 }
 
 #[cw_serde]

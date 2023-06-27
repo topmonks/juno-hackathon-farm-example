@@ -6,9 +6,74 @@ use crate::{
     msg::ContractInformationResponse,
 };
 
+fn plant_dto(plant: &Option<Plant>, block: u64) -> Option<PlantDto> {
+    match plant {
+        None => None,
+        Some(plant) => Some(PlantDto {
+            created_at: plant.created_at,
+            growth_period: plant.growth_period,
+            komple: plant.komple.clone(),
+            stages: plant.stages,
+            r#type: plant.r#type.clone(),
+            watered_at: plant.watered_at.clone(),
+            can_harvest: plant.can_harvest(block),
+            can_water: plant.can_water(block),
+            current_stage: plant.get_current_stage(block),
+            is_dead: plant.is_dead(block),
+        }),
+    }
+}
+
+fn slot_dto(slot: &Slot, block: u64) -> SlotDto {
+    SlotDto {
+        plant: plant_dto(&slot.plant, block),
+        r#type: slot.r#type.clone(),
+    }
+}
+
 #[cw_serde]
 pub struct FarmProfile {
     plots: Vec<Vec<Slot>>,
+}
+
+pub fn farm_profile_dto(farm_profile: &Option<FarmProfile>, block: u64) -> Option<FarmProfileDto> {
+    match farm_profile {
+        None => None,
+        Some(farm_profile) => Some(FarmProfileDto {
+            plots: farm_profile
+                .plots
+                .iter()
+                .map(|rows| rows.iter().map(|slot| slot_dto(slot, block)).collect())
+                .collect(),
+            blocks: block,
+        }),
+    }
+}
+
+#[cw_serde]
+pub struct PlantDto {
+    pub r#type: PlantType,
+    pub stages: u64,
+    pub growth_period: u64,
+    pub created_at: u64,
+    pub watered_at: Vec<u64>,
+    pub komple: Option<KomplePlant>,
+    pub can_water: bool,
+    pub can_harvest: bool,
+    pub current_stage: u64,
+    pub is_dead: bool,
+}
+
+#[cw_serde]
+pub struct SlotDto {
+    pub r#type: SlotType,
+    pub plant: Option<PlantDto>,
+}
+
+#[cw_serde]
+pub struct FarmProfileDto {
+    plots: Vec<Vec<SlotDto>>,
+    blocks: u64,
 }
 
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
@@ -30,21 +95,23 @@ fn create_field_plot() -> Slot {
     };
 }
 
-fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>) -> Plant {
+fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>, block: u64) -> Plant {
     match plant_type {
         PlantType::Sunflower => Plant {
             r#type: PlantType::Sunflower,
             stages: 5,
-            current_stage: 1,
-            dead: false,
             komple,
+            growth_period: 10,
+            created_at: block,
+            watered_at: vec![block],
         },
         PlantType::Wheat => Plant {
             r#type: PlantType::Wheat,
-            stages: 5,
-            current_stage: 1,
-            dead: false,
+            stages: 4,
             komple,
+            growth_period: 10,
+            created_at: block,
+            watered_at: vec![block],
         },
     }
 }
@@ -131,6 +198,7 @@ impl FarmProfile {
         y: usize,
         plant_type: &PlantType,
         komple: Option<KomplePlant>,
+        block: u64,
     ) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
@@ -139,22 +207,22 @@ impl FarmProfile {
                 x,
                 y,
                 Slot {
-                    plant: Some(create_plant(plant_type, komple)),
+                    plant: Some(create_plant(plant_type, komple, block)),
                     ..plot
                 },
             );
         }
     }
 
-    pub fn water_plant(&mut self, x: usize, y: usize) {
+    pub fn water_plant(&mut self, x: usize, y: usize, block: u64) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         let updated_plant = plant.map(|p| {
-            if p.stages > p.current_stage {
-                return Plant {
-                    current_stage: p.current_stage + 1,
-                    ..p
-                };
+            if p.can_water(block) {
+                let mut p2 = p.clone();
+                p2.watered_at.push(block);
+
+                return p2;
             }
 
             p
@@ -170,11 +238,11 @@ impl FarmProfile {
         );
     }
 
-    pub fn harvest(&mut self, x: usize, y: usize) {
+    pub fn harvest(&mut self, x: usize, y: usize, block: u64) {
         let plot = self.get_plot(x, y);
         let plant = plot.plant;
         let updated_plant = plant.map(|p| {
-            if p.stages == p.current_stage {
+            if p.can_harvest(block) {
                 return None;
             }
 

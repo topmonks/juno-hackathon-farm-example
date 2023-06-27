@@ -9,7 +9,7 @@ use crate::{
 
 pub fn seed(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     sender: String,
     _token_id: String,
     plant_type: PlantType,
@@ -34,7 +34,13 @@ pub fn seed(
         )));
     }
 
-    farm.plant_seed(x.into(), y.into(), &plant_type, Some(komple));
+    farm.plant_seed(
+        x.into(),
+        y.into(),
+        &plant_type,
+        Some(komple),
+        env.block.height,
+    );
     FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
     Ok(Response::new().add_attribute("action", "seed"))
