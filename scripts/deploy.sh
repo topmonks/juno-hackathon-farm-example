@@ -91,4 +91,4 @@ function deploy_update {
 }
 
 # deploy_new
-deploy_update
+# deploy_update

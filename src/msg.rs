@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw721::Cw721ReceiveMsg;
 
-use crate::state::FarmProfileDto;
+use crate::state::{FarmProfile, FarmProfileDto};
 
 #[cw_serde]
 pub struct InstantiateMsg {

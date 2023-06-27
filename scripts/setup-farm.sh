@@ -3,17 +3,17 @@ CONTRACT_ADDR=$(<./scripts/contract-address-junox)
 ADMIN="${SENDER:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}"
 
 MEADOW='{"type": "meadow"}'
-SUNFLOWER_1='{"type": "field", "plant": {"type": "sunflower", "current_stage": 1, "stages": 5, "dead": false} }'
-SUNFLOWER_2='{"type": "field", "plant": {"type": "sunflower", "current_stage": 2, "stages": 5, "dead": false} }'
-SUNFLOWER_3='{"type": "field", "plant": {"type": "sunflower", "current_stage": 3, "stages": 5, "dead": false} }'
-SUNFLOWER_4='{"type": "field", "plant": {"type": "sunflower", "current_stage": 4, "stages": 5, "dead": false} }'
-SUNFLOWER_5='{"type": "field", "plant": {"type": "sunflower", "current_stage": 5, "stages": 5, "dead": false} }'
+SUNFLOWER_1='{"type": "field", "plant": {"type": "sunflower", "growth_period": 10, "stages": 5, "created_at": 2100095, "watered_at": [1,1,1,1,1]} }'
+SUNFLOWER_2='{"type": "field", "plant": {"type": "sunflower", "growth_period": 10, "stages": 5, "created_at": 2100095, "watered_at": [1,1,1,1,1]} }'
+SUNFLOWER_3='{"type": "field", "plant": {"type": "sunflower", "growth_period": 10, "stages": 5, "created_at": 2100095, "watered_at": [1,1,1,1,1]} }'
+SUNFLOWER_4='{"type": "field", "plant": {"type": "sunflower", "growth_period": 10, "stages": 5, "created_at": 2100095, "watered_at": [1,1,1,1,1]} }'
+SUNFLOWER_5='{"type": "field", "plant": {"type": "sunflower", "growth_period": 10, "stages": 5, "created_at": 2100095, "watered_at": [1,1,1,1,1]} }'
 
-WHEAT_1='{"type": "field", "plant": {"type": "wheat", "current_stage": 1, "stages": 5, "dead": false} }'
-WHEAT_2='{"type": "field", "plant": {"type": "wheat", "current_stage": 2, "stages": 5, "dead": false} }'
-WHEAT_3='{"type": "field", "plant": {"type": "wheat", "current_stage": 3, "stages": 5, "dead": false} }'
-WHEAT_4='{"type": "field", "plant": {"type": "wheat", "current_stage": 4, "stages": 5, "dead": false} }'
-WHEAT_5='{"type": "field", "plant": {"type": "wheat", "current_stage": 5, "stages": 5, "dead": false} }'
+WHEAT_1='{"type": "field", "plant": {"type": "wheat", "growth_period": 10, "stages": 4, "created_at": 2100095, "watered_at": [1,1,1,1]} }'
+WHEAT_2='{"type": "field", "plant": {"type": "wheat", "growth_period": 10, "stages": 4, "created_at": 2100095, "watered_at": [1,1,1,1]} }'
+WHEAT_3='{"type": "field", "plant": {"type": "wheat", "growth_period": 10, "stages": 4, "created_at": 2100095, "watered_at": [1,1,1,1]} }'
+WHEAT_4='{"type": "field", "plant": {"type": "wheat", "growth_period": 10, "stages": 4, "created_at": 2100095, "watered_at": [1,1,1,1]} }'
+WHEAT_5='{"type": "field", "plant": {"type": "wheat", "growth_period": 10, "stages": 4, "created_at": 2100095, "watered_at": [1,1,1,1]} }'
 
 SETUP_FARM_MSG=$(cat <<-END
     {
