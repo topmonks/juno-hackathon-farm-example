@@ -7,7 +7,6 @@ use cw2::set_contract_version;
 use komple_framework_mint_module::msg::ExecuteMsg as KompleMintExecuteMsg;
 
 use crate::error::ContractError;
-use crate::farm::SlotType;
 use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
@@ -88,15 +87,7 @@ pub fn execute(
             return match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
-                    let slot = farm.get_plot(x.into(), y.into());
-                    if !slot.can_till(env.block.height) {
-                        return Err(throw_err(&format!(
-                            "Plot [{}, {}] must be meadow or field with dead plant to till",
-                            x, y
-                        )));
-                    }
-
-                    farm.till(x.into(), y.into(), env.block.height);
+                    farm.till(x.into(), y.into(), env.block.height)?;
                     FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
                     Ok(Response::new().add_attribute("action", "tilled"))
@@ -114,42 +105,10 @@ pub fn execute(
             return match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
-                    let plot = farm.get_plot(x.into(), y.into());
-                    let plant = plot.plant;
+                    farm.water_plant(x.into(), y.into(), env.block.height)?;
+                    FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
-                    return match plant {
-                        None => Err(throw_err(&format!(
-                            "Plot [{}, {}] must contain a plant to water.",
-                            x, y
-                        ))),
-                        Some(plant) => {
-                            if !plant.can_water(env.block.height) {
-                                if plant.can_harvest(env.block.height) {
-                                    return Err(throw_err(&format!(
-                                        "Plant [{}, {}] is fully grown and cannot be watered anymore.",
-                                        x, y
-                                    )));
-                                }
-
-                                if plant.is_dead(env.block.height) {
-                                    return Err(throw_err(&format!(
-                                        "Plant [{}, {}] is dead and cannot be watered anymore.",
-                                        x, y
-                                    )));
-                                }
-
-                                return Err(throw_err(&format!(
-                                    "Plant [{}, {}] cannot be watered.",
-                                    x, y
-                                )));
-                            }
-
-                            farm.water_plant(x.into(), y.into(), env.block.height);
-                            FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
-
-                            Ok(Response::new().add_attribute("action", "watered"))
-                        }
-                    };
+                    Ok(Response::new().add_attribute("action", "watered"))
                 }
             };
         }
@@ -170,12 +129,6 @@ pub fn execute(
                             x, y
                         ))),
                         Some(plant) => {
-                            if !plant.can_harvest(env.block.height) {
-                                return Err(throw_err(&format!(
-                                    "Plant [{}, {}] must be fully grown and watered to harvest it.",
-                                    x, y
-                                )));
-                            }
                             let information = INFORMATION.load(deps.storage)?;
 
                             let mut messages: Vec<CosmosMsg> = vec![];
@@ -198,7 +151,7 @@ pub fn execute(
                                 }
                             }
 
-                            farm.harvest(x.into(), y.into(), env.block.height);
+                            farm.harvest(x.into(), y.into(), env.block.height)?;
                             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
                             Ok(Response::new()

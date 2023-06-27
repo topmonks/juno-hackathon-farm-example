@@ -3,7 +3,9 @@ use cw_storage_plus::{Item, Map};
 
 use crate::{
     farm::{KomplePlant, Plant, PlantType, Slot, SlotType},
+    helpers::throw_err,
     msg::ContractInformationResponse,
+    ContractError,
 };
 
 fn plant_dto(plant: &Option<Plant>, block: u64) -> Option<PlantDto> {
@@ -187,12 +189,18 @@ impl FarmProfile {
         );
     }
 
-    pub fn till(&mut self, x: usize, y: usize, block: u64) {
+    pub fn till(&mut self, x: usize, y: usize, block: u64) -> Result<(), ContractError> {
         let plot = self.get_plot(x, y);
-        if plot.can_till(block) {
-            self.set_plot(x, y, create_field_plot());
-            println!("Tilled plot at {}, {}", x, y);
+        if !plot.can_till(block) {
+            return Err(throw_err(&format!(
+                "Plot [{}, {}] must be meadow or field with dead plant to till",
+                x, y
+            )));
         }
+
+        self.set_plot(x, y, create_field_plot());
+
+        Ok(())
     }
 
     pub fn plant_seed(
@@ -217,48 +225,82 @@ impl FarmProfile {
         }
     }
 
-    pub fn water_plant(&mut self, x: usize, y: usize, block: u64) {
+    pub fn water_plant(&mut self, x: usize, y: usize, block: u64) -> Result<(), ContractError> {
         let plot = self.get_plot(x, y);
-        let plant = plot.plant;
-        let updated_plant = plant.map(|p| {
-            if p.can_water(block) {
-                let mut p2 = p.clone();
+        let updated_plant = match plot.plant {
+            None => Err(throw_err(&format!(
+                "Plot [{}, {}] must contain a plant to water.",
+                x, y
+            ))),
+            Some(plant) => {
+                if !plant.can_water(block) {
+                    if plant.can_harvest(block) {
+                        return Err(throw_err(&format!(
+                            "Plant [{}, {}] is fully grown and cannot be watered anymore.",
+                            x, y
+                        )));
+                    }
+
+                    if plant.is_dead(block) {
+                        return Err(throw_err(&format!(
+                            "Plant [{}, {}] is dead and cannot be watered anymore.",
+                            x, y
+                        )));
+                    }
+
+                    return Err(throw_err(&format!(
+                        "Plant [{}, {}] cannot be watered.",
+                        x, y
+                    )));
+                }
+
+                let mut p2 = plant.clone();
                 p2.watered_at.push(block);
 
-                return p2;
+                Ok(p2)
             }
-
-            p
-        });
+        }?;
 
         self.set_plot(
             x,
             y,
             Slot {
-                plant: updated_plant,
+                plant: Some(updated_plant),
                 ..plot
             },
         );
+
+        Ok(())
     }
 
-    pub fn harvest(&mut self, x: usize, y: usize, block: u64) {
+    pub fn harvest(&mut self, x: usize, y: usize, block: u64) -> Result<(), ContractError> {
         let plot = self.get_plot(x, y);
-        let plant = plot.plant;
-        let updated_plant = plant.map(|p| {
-            if p.can_harvest(block) {
-                return None;
-            }
+        let updated_plant = match plot.plant {
+            None => Err(throw_err(&format!(
+                "Plot [{}, {}] must contain a plant to harvest.",
+                x, y
+            ))),
+            Some(plant) => {
+                if !plant.can_harvest(block) {
+                    return Err(throw_err(&format!(
+                        "Plant [{}, {}] must be fully grown and watered to harvest it.",
+                        x, y
+                    )));
+                }
 
-            Some(p)
-        });
+                Ok(plant)
+            }
+        }?;
 
         self.set_plot(
             x,
             y,
             Slot {
-                plant: updated_plant.unwrap(),
+                plant: Some(updated_plant),
                 ..plot
             },
         );
+
+        Ok(())
     }
 }
