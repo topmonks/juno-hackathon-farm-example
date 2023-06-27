@@ -88,14 +88,15 @@ pub fn execute(
             return match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
-                    let plot_value = farm.get_plot(x.into(), y.into());
-                    if plot_value.r#type != SlotType::Meadow {
+                    let slot = farm.get_plot(x.into(), y.into());
+                    if !slot.can_till(env.block.height) {
                         return Err(throw_err(&format!(
-                            "Plot [{}, {}] must be meadow to till",
+                            "Plot [{}, {}] must be meadow or field with dead plant to till",
                             x, y
                         )));
                     }
-                    farm.till(x.into(), y.into());
+
+                    farm.till(x.into(), y.into(), env.block.height);
                     FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
 
                     Ok(Response::new().add_attribute("action", "tilled"))

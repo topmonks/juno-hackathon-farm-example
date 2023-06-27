@@ -28,6 +28,7 @@ fn slot_dto(slot: &Slot, block: u64) -> SlotDto {
     SlotDto {
         plant: plant_dto(&slot.plant, block),
         r#type: slot.r#type.clone(),
+        can_till: slot.can_till(block),
     }
 }
 
@@ -68,6 +69,7 @@ pub struct PlantDto {
 pub struct SlotDto {
     pub r#type: SlotType,
     pub plant: Option<PlantDto>,
+    pub can_till: bool,
 }
 
 #[cw_serde]
@@ -185,8 +187,9 @@ impl FarmProfile {
         );
     }
 
-    pub fn till(&mut self, x: usize, y: usize) {
-        if self.get_plot(x, y).r#type == SlotType::Meadow {
+    pub fn till(&mut self, x: usize, y: usize, block: u64) {
+        let plot = self.get_plot(x, y);
+        if plot.can_till(block) {
             self.set_plot(x, y, create_field_plot());
             println!("Tilled plot at {}, {}", x, y);
         }

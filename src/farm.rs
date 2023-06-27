@@ -90,3 +90,17 @@ pub struct Slot {
     pub r#type: SlotType,
     pub plant: Option<Plant>,
 }
+
+impl Slot {
+    pub fn can_till(&self, block: u64) -> bool {
+        if self.r#type == SlotType::Meadow {
+            return true;
+        }
+
+        self.r#type == SlotType::Field
+            && match &self.plant {
+                None => false,
+                Some(plant) => plant.is_dead(block),
+            }
+    }
+}
