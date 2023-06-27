@@ -1,4 +1,4 @@
-use std::{str::FromStr, thread::current};
+use std::str::FromStr;
 
 use cosmwasm_schema::cw_serde;
 
@@ -77,10 +77,11 @@ impl Plant {
         watered_stages < self.stages && watered_stages == current_stage - 1
     }
 
-    pub fn can_harvest(&self, _block: u64) -> bool {
+    pub fn can_harvest(&self, block: u64) -> bool {
         let watered_stages: u64 = self.watered_at.len().try_into().unwrap();
+        let current_stage = self.get_current_stage(block);
 
-        watered_stages == self.stages
+        self.stages == current_stage && watered_stages == self.stages
     }
 }
 
