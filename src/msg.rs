@@ -17,6 +17,7 @@ pub struct MigrateMsg {}
 #[cw_serde]
 pub enum ExecuteMsg {
     Start {},
+    SetupFarm { farm: FarmProfile, addr: Addr },
     Stop {},
     TillGround { x: u8, y: u8 },
     WaterPlant { x: u8, y: u8 },

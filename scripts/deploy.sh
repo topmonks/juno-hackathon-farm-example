@@ -90,5 +90,5 @@ function deploy_update {
   migrate "${code_id}" "${contract_addr}"
 }
 
-deploy_new
-# deploy_update
+# deploy_new
+deploy_update

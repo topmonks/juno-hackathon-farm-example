@@ -73,6 +73,19 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "start"))
         }
 
+        ExecuteMsg::SetupFarm { farm, addr } => {
+            let sender = info.sender.to_string();
+            let info = INFORMATION.load(deps.storage)?;
+
+            if sender != info.admin {
+                return Err(ContractError::Unauthorized {});
+            }
+
+            FARM_PROFILES.save(deps.storage, addr.as_str(), &farm)?;
+
+            Ok(Response::new().add_attribute("action", "setup_farm"))
+        }
+
         ExecuteMsg::Stop {} => {
             let sender = info.sender.to_string();
             FARM_PROFILES.remove(deps.storage, sender.as_str());
