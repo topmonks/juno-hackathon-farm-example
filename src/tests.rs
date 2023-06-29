@@ -99,7 +99,6 @@ fn proper_initialization() {
 
     let msg = InstantiateMsg {
         admin: None,
-        whitelisted_collections: None,
         komple_mint_addr: None,
     };
     let info = mock_info("creator", &vec![]);

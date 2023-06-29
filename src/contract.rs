@@ -28,13 +28,10 @@ pub fn instantiate(
     let admin = msg.admin.unwrap_or_else(|| info.sender.into_string());
     deps.api.addr_validate(&admin)?;
 
-    let whitelisted_collections = msg.whitelisted_collections.unwrap_or_default();
-
     INFORMATION.save(
         deps.storage,
         &ContractInformationResponse {
             admin,
-            whitelisted_collections,
             komple_mint_addr: msg.komple_mint_addr,
         },
     )?;

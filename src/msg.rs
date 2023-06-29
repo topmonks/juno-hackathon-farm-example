@@ -8,7 +8,6 @@ use crate::state::{FarmProfile, FarmProfileDto};
 pub struct InstantiateMsg {
     pub admin: Option<String>,
     pub komple_mint_addr: Option<String>,
-    pub whitelisted_collections: Option<Vec<KompleCollection>>,
 }
 
 #[cw_serde]
@@ -51,6 +50,5 @@ pub struct KompleCollection {
 #[cw_serde]
 pub struct ContractInformationResponse {
     pub admin: String,
-    pub whitelisted_collections: Vec<KompleCollection>,
     pub komple_mint_addr: Option<String>,
 }
