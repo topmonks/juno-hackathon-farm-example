@@ -35,22 +35,16 @@ function instantiate {
   instantiate_msg=$(cat <<-END
       {
         "admin": "%s",
-        "komple_mint_addr": "%s",
-        "whitelisted_collections": [
-          %s
-        ]
+        "komple_mint_addr": "%s"
       }
 END
   )
-
-  local basic_collection
-  basic_collection="{\"addr\": \"juno1utqv3gte2xttl2a0er8gef2yr6ks3fy20rerc2kvmc6vvwzhu0wsqd7c7e\", \"id\": 1}"
 
   local komple_mint_addr
   komple_mint_addr=juno1dxn84lf6ghvp9uc9y5uh6xs530cwjnz8qkqyrtelzdgjkt72sapsekyveh
 
   local msg
-  msg="$(printf "${instantiate_msg}" "$ADMIN" "$komple_mint_addr" "$basic_collection")"
+  msg="$(printf "${instantiate_msg}" "$ADMIN" "$komple_mint_addr")"
 
   local tx_hash
   tx_hash=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y | jq '.txhash' -r)
