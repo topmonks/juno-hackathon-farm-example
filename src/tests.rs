@@ -1,6 +1,6 @@
 use crate::contract::{execute, instantiate};
 
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ContractInformation, ExecuteMsg, InstantiateMsg};
 use crate::state::INFORMATION;
 
 use cosmwasm_std::testing::{
@@ -110,4 +110,53 @@ fn proper_initialization() {
     let information = INFORMATION.load(&deps.storage).unwrap();
 
     assert_eq!(information.admin, "creator");
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn unauthorized_config_update() {
+    let (mut deps, env) = setup_test(Some(InstantiateMsg {
+        admin: Some("admin".to_string()),
+        komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+    }));
+
+    let sender = "non-admin";
+    let auth_info = mock_info(sender, &vec![]);
+    let msg = ExecuteMsg::UpdateContractInformation {
+        contract_information: ContractInformation {
+            admin: "non-admin".to_string(),
+            komple_mint_addr: Some("new-komple-mint".to_string()),
+        },
+    };
+
+    let _res = execute(deps.as_mut(), env.to_owned(), auth_info, msg).unwrap();
+}
+
+#[test]
+fn authorized_config_update() {
+    let (mut deps, env) = setup_test(Some(InstantiateMsg {
+        admin: Some("admin".to_string()),
+        komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+    }));
+
+    let sender = "admin";
+    let auth_info = mock_info(sender, &vec![]);
+    let msg = ExecuteMsg::UpdateContractInformation {
+        contract_information: ContractInformation {
+            admin: "new-admin".to_string(),
+            komple_mint_addr: Some("new-komple-mint".to_string()),
+        },
+    };
+
+    let _res = execute(deps.as_mut(), env.to_owned(), auth_info, msg).unwrap();
+
+    let information = INFORMATION.load(&deps.storage).unwrap();
+
+    assert_eq!(
+        information,
+        ContractInformation {
+            admin: "new-admin".to_string(),
+            komple_mint_addr: Some("new-komple-mint".to_string())
+        }
+    )
 }

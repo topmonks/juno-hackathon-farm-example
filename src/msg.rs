@@ -16,11 +16,26 @@ pub struct MigrateMsg {}
 #[cw_serde]
 pub enum ExecuteMsg {
     Start {},
-    SetupFarm { farm: FarmProfile, addr: Addr },
+    SetupFarm {
+        farm: FarmProfile,
+        addr: Addr,
+    },
     Stop {},
-    TillGround { x: u8, y: u8 },
-    WaterPlant { x: u8, y: u8 },
-    Harvest { x: u8, y: u8 },
+    TillGround {
+        x: u8,
+        y: u8,
+    },
+    WaterPlant {
+        x: u8,
+        y: u8,
+    },
+    Harvest {
+        x: u8,
+        y: u8,
+    },
+    UpdateContractInformation {
+        contract_information: ContractInformation,
+    },
     ReceiveNft(Cw721ReceiveMsg),
 }
 
@@ -32,7 +47,7 @@ pub enum Cw721HookMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ContractInformationResponse)]
+    #[returns(ContractInformation)]
     ContractInfo {},
 
     // Returns a specific users farm profile from state via query
@@ -48,7 +63,7 @@ pub struct KompleCollection {
 }
 
 #[cw_serde]
-pub struct ContractInformationResponse {
+pub struct ContractInformation {
     pub admin: String,
     pub komple_mint_addr: Option<String>,
 }

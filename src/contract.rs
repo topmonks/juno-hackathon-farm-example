@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 use komple_framework_mint_module::msg::ExecuteMsg as KompleMintExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ContractInformationResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ContractInformation, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
 use crate::receive::receive;
@@ -30,7 +30,7 @@ pub fn instantiate(
 
     INFORMATION.save(
         deps.storage,
-        &ContractInformationResponse {
+        &ContractInformation {
             admin,
             komple_mint_addr: msg.komple_mint_addr,
         },
@@ -171,6 +171,20 @@ pub fn execute(
                     };
                 }
             };
+        }
+        ExecuteMsg::UpdateContractInformation {
+            contract_information,
+        } => {
+            let sender = info.sender.to_string();
+            let info = INFORMATION.load(deps.storage)?;
+
+            if sender != info.admin {
+                return Err(ContractError::Unauthorized {});
+            }
+
+            INFORMATION.save(deps.storage, &contract_information)?;
+
+            Ok(Response::new().add_attribute("action", "update_contract_information"))
         }
     }
 }

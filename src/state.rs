@@ -4,7 +4,7 @@ use cw_storage_plus::{Item, Map};
 use crate::{
     farm::{KomplePlant, Plant, PlantType, Slot, SlotType},
     helpers::throw_err,
-    msg::ContractInformationResponse,
+    msg::ContractInformation,
     params, ContractError,
 };
 
@@ -83,7 +83,7 @@ pub struct FarmProfileDto {
 }
 
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
-pub const INFORMATION: Item<ContractInformationResponse> = Item::new("info");
+pub const INFORMATION: Item<ContractInformation> = Item::new("info");
 
 fn create_meadow_plot(block: u64) -> Slot {
     return Slot {

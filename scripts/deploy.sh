@@ -41,7 +41,7 @@ END
   )
 
   local komple_mint_addr
-  komple_mint_addr=juno1dxn84lf6ghvp9uc9y5uh6xs530cwjnz8qkqyrtelzdgjkt72sapsekyveh
+  komple_mint_addr=juno17rth4jstxs7cmrusvyluwlnt34l80cxaz7nufpjfntts00pk79asjxelgs
 
   local msg
   msg="$(printf "${instantiate_msg}" "$ADMIN" "$komple_mint_addr")"
