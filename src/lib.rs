@@ -3,6 +3,7 @@ mod error;
 pub mod farm;
 pub mod helpers;
 pub mod msg;
+pub mod params;
 pub mod receive;
 pub mod state;
 #[cfg(test)]

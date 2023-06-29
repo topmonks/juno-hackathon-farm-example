@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use cosmwasm_schema::cw_serde;
 
-use crate::ContractError;
+use crate::{params, ContractError};
 
 #[cw_serde]
 pub enum SlotType {
@@ -96,7 +96,7 @@ impl Slot {
     pub fn is_field_turned_meadow(&self, block: u64) -> bool {
         self.r#type == SlotType::Field
             && match &self.plant {
-                None => block - self.created_at > 10,
+                None => block - self.created_at > params::FIELD_TURNS_MEADOW,
                 Some(_) => false,
             }
     }

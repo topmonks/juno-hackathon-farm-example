@@ -5,7 +5,7 @@ use crate::{
     farm::{KomplePlant, Plant, PlantType, Slot, SlotType},
     helpers::throw_err,
     msg::ContractInformationResponse,
-    ContractError,
+    params, ContractError,
 };
 
 fn plant_dto(plant: &Option<Plant>, block: u64) -> Option<PlantDto> {
@@ -109,7 +109,7 @@ fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>, block: u64)
             r#type: PlantType::Sunflower,
             stages: 5,
             komple,
-            growth_period: 10,
+            growth_period: params::GROWTH_PERIOD_SUNFLOWER,
             created_at: block,
             watered_at: vec![block],
         },
@@ -117,7 +117,7 @@ fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>, block: u64)
             r#type: PlantType::Wheat,
             stages: 4,
             komple,
-            growth_period: 10,
+            growth_period: params::GROWTH_PERIOD_WHEET,
             created_at: block,
             watered_at: vec![block],
         },
