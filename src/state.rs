@@ -29,8 +29,9 @@ fn plant_dto(plant: &Option<Plant>, block: u64) -> Option<PlantDto> {
 fn slot_dto(slot: &Slot, block: u64) -> SlotDto {
     SlotDto {
         plant: plant_dto(&slot.plant, block),
-        r#type: slot.r#type.clone(),
+        r#type: slot.get_real_type(block),
         can_till: slot.can_till(block),
+        created_at: slot.created_at,
     }
 }
 
@@ -72,6 +73,7 @@ pub struct SlotDto {
     pub r#type: SlotType,
     pub plant: Option<PlantDto>,
     pub can_till: bool,
+    pub created_at: u64,
 }
 
 #[cw_serde]
@@ -83,18 +85,20 @@ pub struct FarmProfileDto {
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
 pub const INFORMATION: Item<ContractInformationResponse> = Item::new("info");
 
-fn create_meadow_plot() -> Slot {
+fn create_meadow_plot(block: u64) -> Slot {
     return Slot {
         r#type: SlotType::Meadow,
         plant: None,
+        created_at: block,
     };
 }
 
-fn create_field_plot() -> Slot {
+fn create_field_plot(block: u64) -> Slot {
     return {
         Slot {
             r#type: SlotType::Field,
             plant: None,
+            created_at: block,
         }
     };
 }
@@ -121,17 +125,14 @@ fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>, block: u64)
 }
 
 impl FarmProfile {
-    pub fn new() -> Self {
+    pub fn new(block: u64) -> Self {
         let initial_plots = 9;
 
         let mut plots = vec![];
         for _ in 0..initial_plots {
             let mut row = vec![];
             for _ in 0..initial_plots {
-                row.push(Slot {
-                    r#type: SlotType::Meadow,
-                    plant: None,
-                });
+                row.push(create_meadow_plot(block));
             }
             plots.push(row);
         }
@@ -166,16 +167,16 @@ impl FarmProfile {
         self.plots[x][y] = value;
     }
 
-    pub fn upgrade_size(&mut self, amount: usize) {
+    pub fn upgrade_size(&mut self, amount: usize, block: u64) {
         for row in &mut self.plots {
             for _ in 0..amount {
-                row.push(create_meadow_plot());
+                row.push(create_meadow_plot(block));
             }
         }
 
         let mut new_row = vec![];
         for _ in 0..self.get_size() + amount {
-            new_row.push(create_meadow_plot());
+            new_row.push(create_meadow_plot(block));
         }
 
         for _ in 0..amount {
@@ -198,7 +199,7 @@ impl FarmProfile {
             )));
         }
 
-        self.set_plot(x, y, create_field_plot());
+        self.set_plot(x, y, create_field_plot(block));
 
         Ok(())
     }
@@ -212,8 +213,7 @@ impl FarmProfile {
         block: u64,
     ) {
         let plot = self.get_plot(x, y);
-        let plant = plot.plant;
-        if plot.r#type == SlotType::Field && plant.is_none() {
+        if plot.get_real_type(block) == SlotType::Field && plot.plant.is_none() {
             self.set_plot(
                 x,
                 y,

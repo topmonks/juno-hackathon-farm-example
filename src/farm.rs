@@ -89,18 +89,33 @@ impl Plant {
 pub struct Slot {
     pub r#type: SlotType,
     pub plant: Option<Plant>,
+    pub created_at: u64,
 }
 
 impl Slot {
-    pub fn can_till(&self, block: u64) -> bool {
-        if self.r#type == SlotType::Meadow {
-            return true;
-        }
-
+    pub fn is_field_turned_meadow(&self, block: u64) -> bool {
         self.r#type == SlotType::Field
             && match &self.plant {
+                None => block - self.created_at > 10,
+                Some(_) => false,
+            }
+    }
+
+    pub fn get_real_type(&self, block: u64) -> SlotType {
+        if self.is_field_turned_meadow(block) {
+            return SlotType::Meadow;
+        }
+
+        return self.r#type.clone();
+    }
+
+    pub fn can_till(&self, block: u64) -> bool {
+        match self.get_real_type(block) {
+            SlotType::Meadow => true,
+            SlotType::Field => match &self.plant {
                 None => false,
                 Some(plant) => plant.is_dead(block),
-            }
+            },
+        }
     }
 }

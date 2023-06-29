@@ -64,7 +64,7 @@ pub fn execute(
                 return Err(throw_err("Farm already exists for you"));
             }
 
-            let farm_profile: FarmProfile = FarmProfile::new();
+            let farm_profile: FarmProfile = FarmProfile::new(env.block.height);
             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm_profile)?;
 
             Ok(Response::new().add_attribute("action", "start"))

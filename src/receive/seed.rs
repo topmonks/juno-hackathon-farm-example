@@ -26,8 +26,7 @@ pub fn seed(
     let mut farm = farm.unwrap();
 
     let plot = farm.get_plot(x.into(), y.into());
-    let plant = plot.plant;
-    if plot.r#type != SlotType::Field || plant.is_some() {
+    if plot.get_real_type(env.block.height) != SlotType::Field || plot.plant.is_some() {
         return Err(throw_err(&format!(
             "Plot [{}, {}] must be an empty field to plant a seed.",
             x, y
