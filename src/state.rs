@@ -275,7 +275,8 @@ impl FarmProfile {
 
     pub fn harvest(&mut self, x: usize, y: usize, block: u64) -> Result<(), ContractError> {
         let plot = self.get_plot(x, y);
-        let updated_plant = match plot.plant {
+
+        match plot.plant {
             None => Err(throw_err(&format!(
                 "Plot [{}, {}] must contain a plant to harvest.",
                 x, y
@@ -288,19 +289,10 @@ impl FarmProfile {
                     )));
                 }
 
-                Ok(plant)
+                self.set_plot(x, y, create_field_plot(block));
+
+                Ok(())
             }
-        }?;
-
-        self.set_plot(
-            x,
-            y,
-            Slot {
-                plant: Some(updated_plant),
-                ..plot
-            },
-        );
-
-        Ok(())
+        }
     }
 }
