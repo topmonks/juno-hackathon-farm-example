@@ -3,7 +3,8 @@
 set -euo pipefail
 shopt -s inherit_errexit
 
-ADMIN=${1:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}
+ADMIN="${1:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}"
+KOMPLE_MINT_ADDR="${KOMPLE_MINT_ADDR:-juno17rth4jstxs7cmrusvyluwlnt34l80cxaz7nufpjfntts00pk79asjxelgs}"
 
 JUNOFARMS_PATH='../junofarms'
 
@@ -40,11 +41,8 @@ function instantiate {
 END
   )
 
-  local komple_mint_addr
-  komple_mint_addr=juno17rth4jstxs7cmrusvyluwlnt34l80cxaz7nufpjfntts00pk79asjxelgs
-
   local msg
-  msg="$(printf "${instantiate_msg}" "$ADMIN" "$komple_mint_addr")"
+  msg="$(printf "${instantiate_msg}" "$ADMIN" "${KOMPLE_MINT_ADDR}")"
 
   local tx_hash
   tx_hash=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y | jq '.txhash' -r)
