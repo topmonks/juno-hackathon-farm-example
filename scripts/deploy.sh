@@ -22,10 +22,21 @@ function compile {
 }
 
 function upload_code {
-  local tx_hash
-  tx_hash="$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm store artifacts/juno_farm_hackathon_template.wasm --from "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 -o json -y | jq '.txhash' -r)"
-  sleep 10
+  local response
+  response="$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm store artifacts/juno_farm_hackathon_template.wasm --from "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 -o json -y)"
 
+  local code
+  code="$(echo "${response}" | jq -r '.code')"
+  if [[ "${code}" -ne 0 ]]; then
+      echo "[ERROR] Uploading code failed:" >&2
+      echo "${response}" >&2
+      return 1
+  fi
+
+  local tx_hash
+  tx_hash="$(echo "${response}" | jq -r '.txhash')"
+
+  sleep 10
   junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value' -r
 }
 
