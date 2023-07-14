@@ -222,6 +222,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 .idx
                 .total
                 .range(deps.storage, None, None, Order::Descending)
+                .take(100)
                 .map(|res| match res {
                     Ok((_, v)) => {
                         let total: u64 = v.total();
