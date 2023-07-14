@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult, WasmMsg,
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
+    WasmMsg,
 };
 use cw2::set_contract_version;
 use komple_framework_mint_module::msg::ExecuteMsg as KompleMintExecuteMsg;
@@ -11,7 +14,7 @@ use crate::msg::{ContractInformation, ExecuteMsg, InstantiateMsg, MigrateMsg, Qu
 
 use crate::helpers::throw_err;
 use crate::receive::receive;
-use crate::state::{farm_profile_dto, FarmProfile, FARM_PROFILES, INFORMATION};
+use crate::state::{farm_profile_dto, points, FarmProfile, Points, FARM_PROFILES, INFORMATION};
 
 const CONTRACT_NAME: &str = "crates.io:farm_template";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -161,8 +164,18 @@ pub fn execute(
                                 }
                             }
 
-                            farm.harvest(x.into(), y.into(), env.block.height)?;
+                            let harvested = farm.harvest(x.into(), y.into(), env.block.height)?;
+                            let mut pts = match points().may_load(deps.storage, &sender.as_str())? {
+                                None => Points {
+                                    addr: sender.clone(),
+                                    plants: HashMap::new(),
+                                },
+                                Some(p) => p,
+                            };
+                            pts.add(harvested);
+
                             FARM_PROFILES.save(deps.storage, sender.as_str(), &farm)?;
+                            points().save(deps.storage, sender.as_str(), &pts)?;
 
                             Ok(Response::new()
                                 .add_attribute("action", "harvested")
@@ -201,12 +214,70 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             let farm = FARM_PROFILES.may_load(deps.storage, address.as_str())?;
             let farm_dto = farm_profile_dto(&farm, env.block.height);
 
-            // get possible actions
             let v = to_binary(&farm_dto)?;
             Ok(v)
+        }
+        QueryMsg::Leaderboard {} => {
+            let res: Result<Vec<(String, u64)>, _> = points()
+                .idx
+                .total
+                .range(deps.storage, None, None, Order::Descending)
+                .map(|res| match res {
+                    Ok((_, v)) => {
+                        let total: u64 = v.total();
+                        let addr: String = v.addr.into();
+
+                        Ok((addr, total))
+                    }
+                    Err(err) => Err(err),
+                })
+                .collect();
+
+            match res {
+                Ok(v) => Ok(to_binary(&v)?),
+                Err(err) => Err(err),
+            }
         }
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::testing::mock_dependencies;
+
+    use crate::farm::PlantType;
+
+    use super::*;
+
+    #[test]
+    fn save_and_load_points() {
+        let mut deps = mock_dependencies();
+
+        let mut new_points = Points {
+            addr: "123".into(),
+            plants: HashMap::new(),
+        };
+        new_points.add(PlantType::Sunflower);
+        println!("new points: {:?}", new_points);
+        let pts = points();
+        pts.save(deps.as_mut().storage, "123", &new_points).unwrap();
+
+        let res: Result<Vec<(String, u64)>, _> = pts
+            .idx
+            .total
+            .range(deps.as_ref().storage, None, None, Order::Descending)
+            .map(|res| match res {
+                Ok((_, v)) => {
+                    let total: u64 = v.total();
+                    let addr: String = v.addr.into();
+
+                    Ok((addr, total))
+                }
+                Err(err) => Err(err),
+            })
+            .collect();
+
+        println!("result: {:?}", res);
+        assert_eq!(2, 2)
+    }
+}

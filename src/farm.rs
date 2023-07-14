@@ -11,6 +11,7 @@ pub enum SlotType {
 }
 
 #[cw_serde]
+#[derive(Eq, Hash)]
 pub enum PlantType {
     Sunflower,
     Wheat,

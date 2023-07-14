@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use cosmwasm_schema::cw_serde;
-use cw_storage_plus::{Item, Map};
+use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 use crate::{
     farm::{KomplePlant, Plant, PlantType, Slot, SlotType},
@@ -84,6 +86,50 @@ pub struct FarmProfileDto {
 
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
 pub const INFORMATION: Item<ContractInformation> = Item::new("info");
+
+#[cw_serde]
+pub struct Points {
+    pub addr: String,
+    pub plants: HashMap<String, u64>,
+}
+
+impl Points {
+    pub fn add(&mut self, plant_type: PlantType) {
+        let plant_type_str = plant_type.to_string();
+        let plant_points = self.plants.get(&plant_type_str).unwrap_or(&0);
+        self.plants.insert(plant_type_str, plant_points + 1);
+    }
+
+    pub fn total(&self) -> u64 {
+        self.plants
+            .values()
+            .copied()
+            .reduce(|acc, next| acc + next)
+            .unwrap_or(0)
+    }
+}
+
+pub struct PointsIndexes<'a> {
+    pub total: MultiIndex<'a, u64, Points, &'a str>,
+}
+
+impl<'a> IndexList<Points> for PointsIndexes<'a> {
+    fn get_indexes(
+        &'_ self,
+    ) -> Box<dyn Iterator<Item = &'_ dyn cw_storage_plus::Index<Points>> + '_> {
+        let v: Vec<&dyn Index<Points>> = vec![&self.total];
+        Box::new(v.into_iter())
+    }
+}
+
+pub fn points<'a>() -> IndexedMap<'a, &'a str, Points, PointsIndexes<'a>> {
+    IndexedMap::new(
+        "points",
+        PointsIndexes {
+            total: MultiIndex::new(|_k, t| t.total(), "points", "points_total"),
+        },
+    )
+}
 
 fn create_meadow_plot(block: u64) -> Slot {
     return Slot {
@@ -273,7 +319,7 @@ impl FarmProfile {
         Ok(())
     }
 
-    pub fn harvest(&mut self, x: usize, y: usize, block: u64) -> Result<(), ContractError> {
+    pub fn harvest(&mut self, x: usize, y: usize, block: u64) -> Result<PlantType, ContractError> {
         let plot = self.get_plot(x, y);
 
         match plot.plant {
@@ -291,7 +337,7 @@ impl FarmProfile {
 
                 self.set_plot(x, y, create_field_plot(block));
 
-                Ok(())
+                Ok(plant.r#type)
             }
         }
     }

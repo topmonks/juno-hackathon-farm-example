@@ -53,6 +53,9 @@ pub enum QueryMsg {
     // Returns a specific users farm profile from state via query
     #[returns(FarmProfileDto)]
     GetFarmProfile { address: String },
+
+    #[returns(Vec<(u64, String)>)]
+    Leaderboard {},
 }
 
 // === RESPONSES ===
