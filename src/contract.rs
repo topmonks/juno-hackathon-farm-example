@@ -258,7 +258,7 @@ mod tests {
             plants: HashMap::new(),
         };
         new_points.add(PlantType::Sunflower);
-        println!("new points: {:?}", new_points);
+
         let pts = points();
         pts.save(deps.as_mut().storage, "123", &new_points).unwrap();
 
@@ -277,7 +277,6 @@ mod tests {
             })
             .collect();
 
-        println!("result: {:?}", res);
-        assert_eq!(2, 2)
+        assert_eq!(res.unwrap(), vec![("123".to_string(), 1)])
     }
 }
