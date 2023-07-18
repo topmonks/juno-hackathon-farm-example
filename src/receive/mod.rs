@@ -23,7 +23,7 @@ pub fn receive(
     let config = INFORMATION.load(deps.storage)?;
 
     if config.komple_mint_addr.is_none() {
-        return Err(throw_err(&format!("Komple mint address not provided",)));
+        return Err(throw_err("Komple mint address not provided"));
     }
 
     let collections: ResponseWrapper<Vec<CollectionsResponse>> = deps.querier.query_wasm_smart(
@@ -38,7 +38,7 @@ pub fn receive(
     let collection = collections.data.iter().find(|c| info.sender.eq(&c.address));
 
     if collection.is_none() {
-        return Err(throw_err(&format!("Unauthorized collection",)));
+        return Err(throw_err("Unauthorized collection"));
     }
 
     let collection = collection.unwrap();
@@ -51,7 +51,7 @@ pub fn receive(
     )?;
 
     if submodules.data.metadata.is_none() {
-        return Err(throw_err(&format!("Missing Komple metadata submodule",)));
+        return Err(throw_err("Missing Komple metadata submodule"));
     }
 
     let metadata: ResponseWrapper<MetadataResponse> = deps.querier.query_wasm_smart(
@@ -69,7 +69,7 @@ pub fn receive(
         .find(|a| a.trait_type == "type");
 
     if plant_type.is_none() {
-        return Err(throw_err(&format!("Missing metadata type",)));
+        return Err(throw_err("Missing metadata type"));
     }
 
     let plant_type = plant_type.unwrap().value.parse()?;
@@ -137,7 +137,7 @@ mod test {
             });
 
         let collection_addr = "collection_addr";
-        let auth_info = mock_info(collection_addr, &vec![]);
+        let auth_info = mock_info(collection_addr, &[]);
         let nft_owner = "nft_owner";
         let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg {
             sender: nft_owner.to_string(),
@@ -214,7 +214,7 @@ mod test {
                 _ => general_handle_wasm_query(wasm_query),
             });
 
-        let auth_info = mock_info(collection_addr, &vec![]);
+        let auth_info = mock_info(collection_addr, &[]);
         let nft_owner = "nft_owner";
         init_farm(nft_owner, deps.as_mut());
         till(nft_owner, 0, 0, deps.as_mut());
@@ -227,6 +227,6 @@ mod test {
 
         let res = execute(deps.as_mut(), env.to_owned(), auth_info, msg);
 
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
     }
 }

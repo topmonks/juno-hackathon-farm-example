@@ -11,21 +11,18 @@ use crate::{
 };
 
 fn plant_dto(plant: &Option<Plant>, block: u64) -> Option<PlantDto> {
-    match plant {
-        None => None,
-        Some(plant) => Some(PlantDto {
-            created_at: plant.created_at,
-            growth_period: plant.growth_period,
-            komple: plant.komple.clone(),
-            stages: plant.stages,
-            r#type: plant.r#type.clone(),
-            watered_at: plant.watered_at.clone(),
-            can_harvest: plant.can_harvest(block),
-            can_water: plant.can_water(block),
-            current_stage: plant.get_current_stage(block),
-            is_dead: plant.is_dead(block),
-        }),
-    }
+    plant.as_ref().map(|plant| PlantDto {
+        created_at: plant.created_at,
+        growth_period: plant.growth_period,
+        komple: plant.komple.clone(),
+        stages: plant.stages,
+        r#type: plant.r#type.clone(),
+        watered_at: plant.watered_at.clone(),
+        can_harvest: plant.can_harvest(block),
+        can_water: plant.can_water(block),
+        current_stage: plant.get_current_stage(block),
+        is_dead: plant.is_dead(block),
+    })
 }
 
 fn slot_dto(slot: &Slot, block: u64) -> SlotDto {
@@ -43,17 +40,14 @@ pub struct FarmProfile {
 }
 
 pub fn farm_profile_dto(farm_profile: &Option<FarmProfile>, block: u64) -> Option<FarmProfileDto> {
-    match farm_profile {
-        None => None,
-        Some(farm_profile) => Some(FarmProfileDto {
-            plots: farm_profile
-                .plots
-                .iter()
-                .map(|rows| rows.iter().map(|slot| slot_dto(slot, block)).collect())
-                .collect(),
-            blocks: block,
-        }),
-    }
+    farm_profile.as_ref().map(|farm_profile| FarmProfileDto {
+        plots: farm_profile
+            .plots
+            .iter()
+            .map(|rows| rows.iter().map(|slot| slot_dto(slot, block)).collect())
+            .collect(),
+        blocks: block,
+    })
 }
 
 #[cw_serde]
@@ -132,21 +126,19 @@ pub fn points<'a>() -> IndexedMap<'a, &'a str, Points, PointsIndexes<'a>> {
 }
 
 fn create_meadow_plot(block: u64) -> Slot {
-    return Slot {
+    Slot {
         r#type: SlotType::Meadow,
         plant: None,
         created_at: block,
-    };
+    }
 }
 
 fn create_field_plot(block: u64) -> Slot {
-    return {
-        Slot {
-            r#type: SlotType::Field,
-            plant: None,
-            created_at: block,
-        }
-    };
+    Slot {
+        r#type: SlotType::Field,
+        plant: None,
+        created_at: block,
+    }
 }
 
 fn create_plant(plant_type: &PlantType, komple: Option<KomplePlant>, block: u64) -> Plant {
@@ -206,7 +198,7 @@ impl FarmProfile {
         let row = self.plots.get(x);
         let col = row.unwrap().get(y);
 
-        return col.unwrap().clone();
+        col.unwrap().clone()
     }
 
     pub fn set_plot(&mut self, x: usize, y: usize, value: Slot) {

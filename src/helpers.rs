@@ -13,5 +13,5 @@ pub fn admin_error_check(deps: Deps, info: MessageInfo) -> Result<(), ContractEr
 }
 
 pub fn throw_err(msg: &str) -> ContractError {
-    return ContractError::Std(cosmwasm_std::StdError::generic_err(msg));
+    ContractError::Std(cosmwasm_std::StdError::generic_err(msg))
 }

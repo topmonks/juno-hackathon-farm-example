@@ -59,9 +59,8 @@ pub struct Plant {
 impl Plant {
     pub fn get_current_stage(&self, block: u64) -> u64 {
         let passed_time = block - self.created_at;
-        let current_period = passed_time / self.growth_period + 1;
 
-        current_period
+        passed_time / self.growth_period + 1
     }
 
     pub fn is_dead(&self, block: u64) -> bool {
@@ -107,7 +106,7 @@ impl Slot {
             return SlotType::Meadow;
         }
 
-        return self.r#type.clone();
+        self.r#type.clone()
     }
 
     pub fn can_till(&self, block: u64) -> bool {

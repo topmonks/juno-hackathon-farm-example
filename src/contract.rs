@@ -97,7 +97,7 @@ pub fn execute(
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
 
-            return match farm {
+            match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
                     farm.till(x.into(), y.into(), env.block.height)?;
@@ -105,7 +105,7 @@ pub fn execute(
 
                     Ok(Response::new().add_attribute("action", "tilled"))
                 }
-            };
+            }
         }
 
         ExecuteMsg::ReceiveNft(msg) => receive(deps, env, info, msg),
@@ -115,7 +115,7 @@ pub fn execute(
             let farm: Option<FarmProfile> =
                 FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
 
-            return match farm {
+            match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
                     farm.water_plant(x.into(), y.into(), env.block.height)?;
@@ -123,20 +123,20 @@ pub fn execute(
 
                     Ok(Response::new().add_attribute("action", "watered"))
                 }
-            };
+            }
         }
 
         ExecuteMsg::Harvest { x, y } => {
             let sender = info.sender.to_string();
             let farm = FARM_PROFILES.may_load(deps.storage, sender.as_str())?;
 
-            return match farm {
+            match farm {
                 None => Err(throw_err("You do not have a farm")),
                 Some(mut farm) => {
                     let plot = farm.get_plot(x.into(), y.into());
                     let plant = plot.plant;
 
-                    return match plant {
+                    match plant {
                         None => Err(throw_err(&format!(
                             "Plot [{}, {}] must contain a plant to harvest.",
                             x, y
@@ -165,7 +165,7 @@ pub fn execute(
                             }
 
                             let harvested = farm.harvest(x.into(), y.into(), env.block.height)?;
-                            let mut pts = match points().may_load(deps.storage, &sender.as_str())? {
+                            let mut pts = match points().may_load(deps.storage, sender.as_str())? {
                                 None => Points {
                                     addr: sender.clone(),
                                     plants: HashMap::new(),
@@ -181,9 +181,9 @@ pub fn execute(
                                 .add_attribute("action", "harvested")
                                 .add_messages(messages))
                         }
-                    };
+                    }
                 }
-            };
+            }
         }
         ExecuteMsg::UpdateContractInformation {
             contract_information,
@@ -226,7 +226,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 .map(|res| match res {
                     Ok((_, v)) => {
                         let total: u64 = v.total();
-                        let addr: String = v.addr.into();
+                        let addr: String = v.addr;
 
                         Ok((addr, total))
                     }
@@ -270,7 +270,7 @@ mod tests {
             .map(|res| match res {
                 Ok((_, v)) => {
                     let total: u64 = v.total();
-                    let addr: String = v.addr.into();
+                    let addr: String = v.addr;
 
                     Ok((addr, total))
                 }

@@ -7,6 +7,7 @@ use crate::{
     ContractError,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn seed(
     deps: DepsMut,
     env: Env,

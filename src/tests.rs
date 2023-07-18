@@ -35,7 +35,7 @@ pub fn setup_test(
     let env = mock_env();
 
     if let Some(instantiate_msg) = instantiate_msg {
-        let info = mock_info("creator", &vec![]);
+        let info = mock_info("creator", &[]);
 
         let _res = instantiate(dependencies.as_mut(), mock_env(), info, instantiate_msg).unwrap();
     }
@@ -43,16 +43,16 @@ pub fn setup_test(
     (dependencies, env)
 }
 
-pub fn init_farm(addr: &str, deps: DepsMut) -> () {
+pub fn init_farm(addr: &str, deps: DepsMut) {
     let msg = ExecuteMsg::Start {};
-    let info = mock_info(addr, &vec![]);
+    let info = mock_info(addr, &[]);
 
     let _res = execute(deps, mock_env(), info, msg).unwrap();
 }
 
-pub fn till(addr: &str, x: u8, y: u8, deps: DepsMut) -> () {
+pub fn till(addr: &str, x: u8, y: u8, deps: DepsMut) {
     let msg = ExecuteMsg::TillGround { x, y };
-    let info = mock_info(addr, &vec![]);
+    let info = mock_info(addr, &[]);
 
     let _res = execute(deps, mock_env(), info, msg).unwrap();
 }
@@ -101,11 +101,11 @@ fn proper_initialization() {
         admin: None,
         komple_mint_addr: None,
     };
-    let info = mock_info("creator", &vec![]);
+    let info = mock_info("creator", &[]);
 
     let res = instantiate(deps.as_mut(), mock_env(), info, msg);
 
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let information = INFORMATION.load(&deps.storage).unwrap();
 
@@ -121,7 +121,7 @@ fn unauthorized_config_update() {
     }));
 
     let sender = "non-admin";
-    let auth_info = mock_info(sender, &vec![]);
+    let auth_info = mock_info(sender, &[]);
     let msg = ExecuteMsg::UpdateContractInformation {
         contract_information: ContractInformation {
             admin: "non-admin".to_string(),
@@ -140,7 +140,7 @@ fn authorized_config_update() {
     }));
 
     let sender = "admin";
-    let auth_info = mock_info(sender, &vec![]);
+    let auth_info = mock_info(sender, &[]);
     let msg = ExecuteMsg::UpdateContractInformation {
         contract_information: ContractInformation {
             admin: "new-admin".to_string(),
