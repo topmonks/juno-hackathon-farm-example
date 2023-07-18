@@ -28,9 +28,7 @@ pub fn setup_test(
 ) -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
     let mut dependencies = mock_dependencies();
 
-    dependencies
-        .querier
-        .update_wasm(|x| general_handle_wasm_query(x));
+    dependencies.querier.update_wasm(general_handle_wasm_query);
 
     let env = mock_env();
 
