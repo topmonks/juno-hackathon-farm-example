@@ -143,12 +143,11 @@ pub fn execute(
                         ))),
                         Some(plant) => {
                             let information = INFORMATION.load(deps.storage)?;
-
-                            let mut messages: Vec<CosmosMsg> = vec![];
-
-                            if let Some(komple_mint_addr) = information.komple_mint_addr {
-                                if let Some(komple) = plant.komple {
-                                    let admin_mint_nft = WasmMsg::Execute {
+                            let admin_mint_nft = match information.komple_mint_addr {
+                                None => Err(throw_err("Komple mint addr missing.")),
+                                Some(komple_mint_addr) => match plant.komple {
+                                    None => Err(throw_err("Plant komple missing.")),
+                                    Some(komple) => Ok(WasmMsg::Execute {
                                         contract_addr: komple_mint_addr,
                                         msg: to_binary::<KompleMintExecuteMsg>(
                                             &KompleMintExecuteMsg::AdminMint {
@@ -158,10 +157,13 @@ pub fn execute(
                                             },
                                         )?,
                                         funds: vec![],
-                                    };
+                                    }),
+                                },
+                            }?;
 
-                                    messages.push(admin_mint_nft.into());
-                                }
+                            let mut messages: Vec<CosmosMsg> = vec![];
+                            for _i in 0..2 {
+                                messages.push(admin_mint_nft.clone().into());
                             }
 
                             let harvested = farm.harvest(x.into(), y.into(), env.block.height)?;

@@ -32,6 +32,8 @@ function upload_code {
       echo "${response}" >&2
       return 1
   fi
+  
+  echo "[DEBUG] Code uploaded: ${response}" >&2
 
   local tx_hash
   tx_hash="$(echo "${response}" | jq -r '.txhash')"
