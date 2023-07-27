@@ -42,6 +42,37 @@ function upload_code {
   junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value' -r
 }
 
+function upload_noise_code {
+  local wasm="${1}"
+
+  local response
+  response="$(junod tx wasm store \
+    "${wasm}" \
+    --from "${ADMIN}" \
+    --chain-id uni-6 \
+    --gas=auto \
+    --gas-adjustment 1.4  \
+    --gas-prices 0.025ujunox \
+    --broadcast-mode=async \
+    --node=https://juno-testnet-rpc.polkachu.com:443 -o json -y)"
+
+  local code
+  code="$(echo "${response}" | jq -r '.code')"
+  if [[ "${code}" -ne 0 ]]; then
+      echo "[ERROR] Uploading noise code failed:" >&2
+      echo "${response}" >&2
+      return 1
+  fi
+  
+  echo "[DEBUG] Noise code uploaded: ${response}" >&2
+
+  local tx_hash
+  tx_hash="$(echo "${response}" | jq -r '.txhash')"
+
+  sleep 10
+  junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value' -r
+}
+
 function instantiate {
   local code_id="${1}"
 
@@ -72,6 +103,60 @@ function migrate {
     echo "Migration TX hash: ${tx_hash}"
 }
 
+function instantiate_nois {
+  local code_id="${1}"
+
+  local msg
+  msg=$(cat <<EOF
+{
+  "manager":"${ADMIN}",
+  "prices": [
+    {"denom":"ujunox","amount":"1000000"},
+    {"denom":"ujunox","amount":"50000000"}
+  ],
+  "callback_gas_limit":500000,
+  "test_mode":false,
+  "mode": {
+    "ibc_pay":{
+      "unois_denom":{
+        "ics20_channel":"channel-xx",
+        "denom":"ujunox"
+      }
+    }
+  }
+}
+EOF
+)
+
+  local response
+  response="$(junod tx wasm instantiate "${code_id}" "${msg}" \
+    --label=nois-proxy \
+    --from "${ADMIN}" \
+    --admin "${ADMIN}" \
+    --chain-id uni-6 \
+    --gas=auto \
+    --gas-adjustment 1.4 \
+    --gas-prices 0.025ujunox \
+    --broadcast-mode=sync \
+    --node=https://juno-testnet-rpc.polkachu.com:443 -o json -y)"
+
+  local code
+  code="$(echo "${response}" | jq -r '.code')"
+  if [[ "${code}" -ne 0 ]]; then
+      echo "[ERROR] Instantiating noise failed:" >&2
+      echo "${response}" >&2
+      return 1
+  fi
+  
+  echo "[DEBUG] Noise code instantiated: ${response}" >&2
+
+  local tx_hash
+  tx_hash="$(echo "${response}" | jq -r '.txhash')"
+
+  sleep 10
+  junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 query tx "${tx_hash}" -o json | jq | jq '.logs[0].events[]|select(.type=="wasm").attributes[]|select(.key=="_contract_address").value' -r
+}
+
 function deploy_new {
   compile
   local code_id
@@ -95,5 +180,16 @@ function deploy_update {
   migrate "${code_id}" "${contract_addr}"
 }
 
+function deploy_nois {
+  local wasm="${1}"
+  local code_id
+  code_id=$(upload_noise_code "${wasm}")
+  local contract_addr
+  contract_addr="$(instantiate_nois "${code_id}")"
+  echo "NOIS_CODE_ID: ${code_id}"
+  echo "NOIS_CONTRACT_ADDR: ${contract_addr}"
+}
+
 # deploy_new
 # deploy_update
+# deploy_nois ~/Downloads/nois_proxy.wasm
