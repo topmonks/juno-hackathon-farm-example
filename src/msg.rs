@@ -1,6 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw721::Cw721ReceiveMsg;
+use nois::NoisCallback;
 
 use crate::state::{FarmProfile, FarmProfileDto};
 
@@ -8,6 +9,7 @@ use crate::state::{FarmProfile, FarmProfileDto};
 pub struct InstantiateMsg {
     pub admin: Option<String>,
     pub komple_mint_addr: Option<String>,
+    pub nois_proxy: Option<String>,
 }
 
 #[cw_serde]
@@ -37,6 +39,9 @@ pub enum ExecuteMsg {
         contract_information: ContractInformation,
     },
     ReceiveNft(Cw721ReceiveMsg),
+    NoisReceive {
+        callback: NoisCallback,
+    },
 }
 
 #[cw_serde]

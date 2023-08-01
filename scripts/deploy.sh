@@ -5,9 +5,23 @@ shopt -s inherit_errexit
 
 ADMIN="${1:-juno1zk4c4aamef42cgjexlmksypac8j5xw7n3s4wrd}"
 KOMPLE_MINT_ADDR="${KOMPLE_MINT_ADDR:-juno17rth4jstxs7cmrusvyluwlnt34l80cxaz7nufpjfntts00pk79asjxelgs}"
-NOIS_PROXY="${NOIS_PROXY:-juno17xgzprnr0j4cs72t7xfsr2lsmw8guwj640tr8e96nld524f0gmhq0hewqc}"
+
+# https://docs.nois.network/node_operators/testnet_005.html#uni-6
+# leave NOIS_PROXY empty to not use randomness
+# NOIS_PROXY="${NOIS_PROXY:-juno1pjpntyvkxeuxd709jlupuea3xzxlzsfq574kqefv77fr2kcg4mcqvwqedq}"
+NOIS_PROXY=
 
 JUNOFARMS_PATH='../junofarms'
+
+# https://stackoverflow.com/questions/44792241/constructing-a-json-object-from-a-bash-associative-array#answer-44792751
+function json_stringify_object {
+    local -n json_stringify_object__ref="${1}"
+
+    for k in "${!json_stringify_object__ref[@]}"; do
+        echo "${k}"
+        echo "${json_stringify_object__ref[$k]}"
+    done | jq -nR 'reduce inputs as $i ({}; . + {($i): input})'
+}
 
 function update_contract_address {
   local new_address="${1}"
@@ -85,19 +99,22 @@ function upload_noise_code {
 function instantiate {
   local code_id="${1}"
 
-  local msg
-  msg=$(cat <<END
-      {
-        "admin": "${ADMIN}",
-        "komple_mint_addr": "${KOMPLE_MINT_ADDR}"
-      }
-END
+  local -A data=(
+    [admin]="${ADMIN}"
+    [komple_mint_addr]="${KOMPLE_MINT_ADDR}"
   )
+
+  if [[ -n "${NOIS_PROXY}" ]]; then
+      data[nois_proxy]="${NOIS_PROXY}"
+  fi 
+
+  local msg
+  msg="$(json_stringify_object data)"
 
   echo "[DEBUG] Instantiating with: ${msg}" >&2
 
   local response
-  response=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 1.1 --label " " -o json -y)
+  response=$(junod --chain-id uni-6 --node https://juno-testnet-rpc.polkachu.com:443 tx wasm instantiate "${code_id}" "${msg}" --from "${ADMIN}" --admin "${ADMIN}" --gas-prices 0.075ujunox --gas auto --gas-adjustment 2 --label " " -o json -y)
   assert_response_success "${response}" "Instantiating failed"
 
   local tx_hash

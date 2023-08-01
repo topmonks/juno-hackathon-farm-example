@@ -51,6 +51,7 @@ komple-framework-metadata-module = { version = "1.1.1-beta", features = ["librar
 komple-framework-mint-module = { version = "1.1.1-beta", features = ["library"] }
 komple-framework-token-module = { version = "1.1.1-beta", features = ["library"] }
 komple-framework-types = "1.1.1-beta"
+nois = "0.7.0"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }

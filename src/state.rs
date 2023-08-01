@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 use crate::{
@@ -78,8 +79,18 @@ pub struct FarmProfileDto {
     blocks: u64,
 }
 
+#[cw_serde]
+pub enum NoiseJob {
+    MintSeeds {
+        plant: KomplePlant,
+        recipient: String,
+    },
+}
+
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
 pub const INFORMATION: Item<ContractInformation> = Item::new("info");
+pub const NOIS_PROXY: Item<Addr> = Item::new("nois_proxy");
+pub const NOIS_JOBS: Map<&str, NoiseJob> = Map::new("nois_jobs");
 
 #[cw_serde]
 pub struct Points {

@@ -3,21 +3,68 @@ use std::collections::HashMap;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
-    WasmMsg,
+    ensure_eq, to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Response,
+    StdResult, Storage, WasmMsg,
 };
 use cw2::set_contract_version;
 use komple_framework_mint_module::msg::ExecuteMsg as KompleMintExecuteMsg;
+use nois::{int_in_range, NoisCallback, ProxyExecuteMsg};
 
 use crate::error::ContractError;
+use crate::farm::KomplePlant;
 use crate::msg::{ContractInformation, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use crate::helpers::throw_err;
 use crate::receive::receive;
-use crate::state::{farm_profile_dto, points, FarmProfile, Points, FARM_PROFILES, INFORMATION};
+use crate::state::{
+    farm_profile_dto, points, FarmProfile, NoiseJob, Points, FARM_PROFILES, INFORMATION, NOIS_JOBS,
+    NOIS_PROXY,
+};
 
 const CONTRACT_NAME: &str = "crates.io:farm_template";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+fn mint_seeds(
+    plant: KomplePlant,
+    recipient: String,
+    seeds: i32,
+    storage: &dyn Storage,
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    let information = INFORMATION.load(storage)?;
+    let admin_mint_nft = match information.komple_mint_addr {
+        None => Err(throw_err("Komple mint addr missing.")),
+        Some(komple_mint_addr) => Ok(WasmMsg::Execute {
+            contract_addr: komple_mint_addr,
+            msg: to_binary::<KompleMintExecuteMsg>(&KompleMintExecuteMsg::AdminMint {
+                collection_id: plant.collection_id,
+                recipient,
+                metadata_id: Some(plant.metadata_id),
+            })?,
+            funds: vec![],
+        }),
+    }?;
+
+    let mut messages: Vec<CosmosMsg> = vec![];
+    for _i in 0..seeds {
+        messages.push(admin_mint_nft.clone().into());
+    }
+
+    Ok(messages)
+}
+
+fn noise_job(
+    noise_job: NoiseJob,
+    randomness: [u8; 32],
+    storage: &dyn Storage,
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    match noise_job {
+        NoiseJob::MintSeeds { plant, recipient } => {
+            let seeds = int_in_range(randomness, 2, 5);
+
+            mint_seeds(plant, recipient, seeds, storage)
+        }
+    }
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -38,6 +85,14 @@ pub fn instantiate(
             komple_mint_addr: msg.komple_mint_addr,
         },
     )?;
+
+    match msg.nois_proxy {
+        None => (),
+        Some(addr) => {
+            let nois_proxy_addr = deps.api.addr_validate(&addr)?;
+            NOIS_PROXY.save(deps.storage, &nois_proxy_addr)?;
+        }
+    }
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -110,6 +165,25 @@ pub fn execute(
 
         ExecuteMsg::ReceiveNft(msg) => receive(deps, env, info, msg),
 
+        ExecuteMsg::NoisReceive { callback } => {
+            let proxy = NOIS_PROXY.load(deps.storage)?;
+            ensure_eq!(info.sender, proxy, throw_err("Unauthorized sender"));
+
+            let NoisCallback {
+                job_id, randomness, ..
+            } = callback;
+
+            let randomness: [u8; 32] = randomness
+                .to_array()
+                .map_err(|_| throw_err("Invalid randomness"))?;
+
+            let job = NOIS_JOBS.load(deps.storage, &job_id)?;
+            NOIS_JOBS.remove(deps.storage, &job_id);
+            let messages = noise_job(job, randomness, deps.storage)?;
+
+            Ok(Response::new().add_messages(messages))
+        }
+
         ExecuteMsg::WaterPlant { x, y } => {
             let sender = info.sender.to_string();
             let farm: Option<FarmProfile> =
@@ -142,29 +216,40 @@ pub fn execute(
                             x, y
                         ))),
                         Some(plant) => {
-                            let information = INFORMATION.load(deps.storage)?;
-                            let admin_mint_nft = match information.komple_mint_addr {
-                                None => Err(throw_err("Komple mint addr missing.")),
-                                Some(komple_mint_addr) => match plant.komple {
-                                    None => Err(throw_err("Plant komple missing.")),
-                                    Some(komple) => Ok(WasmMsg::Execute {
-                                        contract_addr: komple_mint_addr,
-                                        msg: to_binary::<KompleMintExecuteMsg>(
-                                            &KompleMintExecuteMsg::AdminMint {
-                                                collection_id: komple.collection_id,
+                            let messages = match plant.komple {
+                                None => Err(throw_err("Plant komple missing.")),
+                                Some(komple) => {
+                                    let nois_proxy = NOIS_PROXY.may_load(deps.storage)?;
+                                    match nois_proxy {
+                                        None => mint_seeds(
+                                            komple,
+                                            info.sender.into_string(),
+                                            2,
+                                            deps.storage,
+                                        ),
+                                        Some(nois_proxy) => {
+                                            let job = NoiseJob::MintSeeds {
+                                                plant: komple,
                                                 recipient: info.sender.into_string(),
-                                                metadata_id: Some(komple.metadata_id),
-                                            },
-                                        )?,
-                                        funds: vec![],
-                                    }),
-                                },
-                            }?;
+                                            };
+                                            NOIS_JOBS.save(deps.storage, "val", &job)?;
 
-                            let mut messages: Vec<CosmosMsg> = vec![];
-                            for _i in 0..2 {
-                                messages.push(admin_mint_nft.clone().into());
-                            }
+                                            let mut messages: Vec<CosmosMsg> = vec![];
+                                            let msg = WasmMsg::Execute {
+                                                contract_addr: nois_proxy.into(),
+                                                msg: to_binary(
+                                                    &ProxyExecuteMsg::GetNextRandomness {
+                                                        job_id: "val".into(), // todo: uuid?
+                                                    },
+                                                )?,
+                                                funds: info.funds.clone(),
+                                            };
+                                            messages.push(msg.into());
+                                            Ok(messages)
+                                        }
+                                    }
+                                }
+                            }?;
 
                             let harvested = farm.harvest(x.into(), y.into(), env.block.height)?;
                             let mut pts = match points().may_load(deps.storage, sender.as_str())? {
