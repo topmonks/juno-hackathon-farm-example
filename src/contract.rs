@@ -18,11 +18,19 @@ use crate::helpers::throw_err;
 use crate::receive::receive;
 use crate::state::{
     farm_profile_dto, points, FarmProfile, NoiseJob, Points, FARM_PROFILES, INFORMATION, NOIS_JOBS,
-    NOIS_PROXY,
+    NOIS_JOB_LAST_ID, NOIS_PROXY,
 };
 
 const CONTRACT_NAME: &str = "crates.io:farm_template";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+fn next_job_id(store: &mut dyn Storage) -> StdResult<String> {
+    let last_id = (NOIS_JOB_LAST_ID.may_load(store)?).unwrap_or(0);
+    let next_id = last_id + 1;
+    NOIS_JOB_LAST_ID.save(store, &next_id)?;
+
+    Ok(next_id.to_string())
+}
 
 fn mint_seeds(
     plant: KomplePlant,
@@ -85,6 +93,8 @@ pub fn instantiate(
             komple_mint_addr: msg.komple_mint_addr,
         },
     )?;
+
+    NOIS_JOB_LAST_ID.save(deps.storage, &0)?;
 
     match msg.nois_proxy {
         None => (),
@@ -232,15 +242,14 @@ pub fn execute(
                                                 plant: komple,
                                                 recipient: info.sender.into_string(),
                                             };
-                                            NOIS_JOBS.save(deps.storage, "val", &job)?;
+                                            let job_id = next_job_id(deps.storage)?;
+                                            NOIS_JOBS.save(deps.storage, &job_id, &job)?;
 
                                             let mut messages: Vec<CosmosMsg> = vec![];
                                             let msg = WasmMsg::Execute {
                                                 contract_addr: nois_proxy.into(),
                                                 msg: to_binary(
-                                                    &ProxyExecuteMsg::GetNextRandomness {
-                                                        job_id: "val".into(), // todo: uuid?
-                                                    },
+                                                    &ProxyExecuteMsg::GetNextRandomness { job_id },
                                                 )?,
                                                 funds: info.funds.clone(),
                                             };

@@ -90,6 +90,7 @@ pub enum NoiseJob {
 pub const FARM_PROFILES: Map<&str, FarmProfile> = Map::new("farm_profiles");
 pub const INFORMATION: Item<ContractInformation> = Item::new("info");
 pub const NOIS_PROXY: Item<Addr> = Item::new("nois_proxy");
+pub const NOIS_JOB_LAST_ID: Item<u64> = Item::new("nois_job_last_id");
 pub const NOIS_JOBS: Map<&str, NoiseJob> = Map::new("nois_jobs");
 
 #[cw_serde]
