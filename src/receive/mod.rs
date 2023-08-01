@@ -116,6 +116,7 @@ mod test {
         let (mut deps, env) = setup_test(Some(InstantiateMsg {
             admin: None,
             komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+            nois_proxy: None,
         }));
 
         deps.querier
@@ -156,6 +157,7 @@ mod test {
         let (mut deps, env) = setup_test(Some(InstantiateMsg {
             admin: None,
             komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+            nois_proxy: None,
         }));
 
         deps.querier

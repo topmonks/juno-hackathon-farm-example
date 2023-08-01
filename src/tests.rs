@@ -98,6 +98,7 @@ fn proper_initialization() {
     let msg = InstantiateMsg {
         admin: None,
         komple_mint_addr: None,
+        nois_proxy: None,
     };
     let info = mock_info("creator", &[]);
 
@@ -116,6 +117,7 @@ fn unauthorized_config_update() {
     let (mut deps, env) = setup_test(Some(InstantiateMsg {
         admin: Some("admin".to_string()),
         komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+        nois_proxy: None,
     }));
 
     let sender = "non-admin";
@@ -135,6 +137,7 @@ fn authorized_config_update() {
     let (mut deps, env) = setup_test(Some(InstantiateMsg {
         admin: Some("admin".to_string()),
         komple_mint_addr: Some(get_komple_addrs().mint.to_string()),
+        nois_proxy: None,
     }));
 
     let sender = "admin";
